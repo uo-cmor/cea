@@ -10,7 +10,7 @@ test_that("estimate works with default specification", {
 
   expect_s3_class(fit, "cea_estimate")
   expect_s3_class(fit, "mcglm")
-  expect_equal(fit, fit_mcglm, ignore_attr = c("class", "spec"), ignore_formula_env = TRUE)
+  expect_equal(fit, fit_mcglm, ignore_attr = c("class", "spec", "call"), ignore_formula_env = TRUE)
 })
 
 test_that("estimate gives appropriate messages", {
@@ -45,7 +45,7 @@ test_that("estimate works with custom `linear_pred`", {
 
   expect_s3_class(fit, "cea_estimate")
   expect_s3_class(fit, "mcglm")
-  expect_equal(fit, fit_mcglm, ignore_attr = c("class", "spec"), ignore_formula_env = TRUE)
+  expect_equal(fit, fit_mcglm, ignore_attr = c("class", "spec", "call"), ignore_formula_env = TRUE)
 })
 
 test_that("estimate works with list data", {
@@ -53,7 +53,7 @@ test_that("estimate works with list data", {
 
   expect_s3_class(fit, "cea_estimate")
   expect_s3_class(fit, "mcglm")
-  expect_equal(fit, fit_mcglm, ignore_attr = c("class", "spec"), ignore_formula_env = TRUE)
+  expect_equal(fit, fit_mcglm, ignore_attr = c("class", "spec", "call"), ignore_formula_env = TRUE)
 })
 
 test_that("estimate works with missing covars", {
@@ -67,12 +67,65 @@ test_that("estimate works with missing covars", {
 
   expect_s3_class(fit, "cea_estimate")
   expect_s3_class(fit, "mcglm")
-  expect_equal(fit, fit2, ignore_attr = c("class", "spec"), ignore_formula_env = TRUE)
+  expect_equal(fit, fit2, ignore_attr = c("class", "spec", "call"), ignore_formula_env = TRUE)
 })
 
 test_that("print.cea_estimate works", {
   fit <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2)
   expect_snapshot_output(fit)
-  class(fit) <- class(fit)[-1]
+  attr(fit, "spec") <- "linear_pred"
   expect_output(print(fit))
 })
+
+test_that("cea_extract_estimate works as expected", {
+  fit <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2)
+
+  out <- list(
+    QALYs = list(linear_pred = "QALYs ~ booster + age + sex",
+                 link = "identity",
+                 variance = "constant",
+                 covariance = "identity",
+                 effect = 0.074458875),
+    Costs = list(linear_pred = "Cost ~ booster + age + sex",
+                 link = "log",
+                 variance = "tweedie",
+                 covariance = "identity",
+                 effect = 2022.699)
+  )
+  expect_equal(cea_extract_estimate(fit), out)
+
+  out <- list(
+    QALYs = list(linear_pred = "QALYs ~ booster + age + sex",
+                 link = "identity",
+                 variance = "constant",
+                 covariance = "identity",
+                 effect = 0.074458875),
+    Costs = list(linear_pred = "Cost ~ booster + age + sex",
+                 link = "log",
+                 variance = "tweedie",
+                 covariance = "identity",
+                 effect = 2024.0034)
+  )
+  expect_equal(cea_extract_estimate(fit, "ATT"), out)
+
+  out <- list(
+    QALYs = list(linear_pred = "QALYs ~ booster + age + sex",
+                 link = "identity",
+                 variance = "constant",
+                 covariance = "identity",
+                 effect = 0.074458875),
+    Costs = list(linear_pred = "Cost ~ booster + age + sex",
+                 link = "log",
+                 variance = "tweedie",
+                 covariance = "identity",
+                 effect = 2021.39456)
+  )
+  expect_equal(cea_extract_estimate(fit, "ATC"), out)
+})
+
+test_that("cea_extract_estimate gives appropriate messages", {
+  fit <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2)
+
+  expect_error(cea_extract_estimate(fit, estimand = "ABC"), class = "cea_error_unknown_estimand")
+})
+

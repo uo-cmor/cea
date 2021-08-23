@@ -66,6 +66,8 @@
 #' @export
 estimate <- function(QALYs, costs, treatment, covars, data,
                      linear_pred = NULL, matrix_pred = NULL, link = NULL, variance = NULL, ...) {
+  cl <- match.call()
+
   if (!is.data.frame(data)) data <- as.data.frame(data)
   if (is.null(link)) {
     if (is.null(linear_pred)) link <- c("identity", "log")
@@ -108,6 +110,7 @@ estimate <- function(QALYs, costs, treatment, covars, data,
                       variance = variance, data = data, ...)
   class(out) <- c("cea_estimate", class(out))
   attr(out, "spec") <- spec
+  attr(out, "call") <- cl
   out
 }
 
@@ -123,10 +126,12 @@ print.cea_estimate <- function(x, ...) {
     cat("             * Link function:", object$QALYs$link, "\n")
     cat("             * Variance function:", object$QALYs$variance, "\n")
     cat("             * Covariance function:", object$QALYs$covariance, "\n\n")
-    cat("Costs model:", rlang::as_string(object$QALYs$linear_pred), "\n")
-    cat("             * Link function:", object$QALYs$link, "\n")
-    cat("             * Variance function:",object$QALYs$variance, "\n")
-    cat("             * Covariance function:", object$QALYs$covariance, "\n\n")
+    cat("Costs model:", rlang::as_string(object$Costs$linear_pred), "\n")
+    cat("             * Link function:", object$Costs$link, "\n")
+    cat("             * Variance function:",object$Costs$variance, "\n")
+    cat("             * Covariance function:", object$Costs$covariance, "\n\n")
+
+    cat("Call:", rlang::quo_text(attr(x, "call")), "\n\n")
 
     cat("Incremental Treatment Effects:\n")
     cat("  QALYs:", sprintf("%+1.3f", object$QALYs$effect), "\n")
@@ -140,17 +145,32 @@ print.cea_estimate <- function(x, ...) {
   NextMethod()
 }
 
-cea_extract_estimate <- function(x) {
-  cost_var <- rlang::as_label(attr(stats::terms(x$linear_pred[[2]]), "variables")[[2]])
-  coefs <- x$Regression[c(2, length(x$Regression) / 2 + 2)]
-  mean <- mean(x$data[[cost_var]])
-  coefs[[2]] <- mean * (exp(coefs[[2]]) - 1)
+cea_extract_estimate <- function(x, estimand = "ATE") {
+  cost_var <- rlang::as_name(attr(stats::terms(x$linear_pred[[2]]), "variables")[[2]])
+  tx_var <- rlang::as_name(attr(stats::terms(x$linear_pred[[2]]), "variables")[[3]])
+  tx <- x$data[[tx_var]]
+  if (is.factor(tx)) tx <- as.integer(tx) - 1
+  effects <- x$Regression[2]
+  coefs <- x$Regression[(length(x$Regression) / 2 + 1):length(x$Regression)]
+  X0 <- X1 <- x$list_X$Costs
+  X0[, 2] <- 0
+  X1[, 2] <- 1
+  if (estimand == "ATT") {
+    X0 <- X0[tx == 1, ]
+    X1 <- X1[tx == 1, ]
+  } else if (estimand == "ATC") {
+    X0 <- X0[tx == 0, ]
+    X1 <- X1[tx == 0, ]
+  } else if (estimand != "ATE") {
+    stop_unknown_estimand(estimand)
+  }
+  effects <- c(effects, mean(exp(X1 %*% coefs)) - mean(exp(X0 %*% coefs)))
   list(
     QALYs = list(linear_pred = rlang::as_label(x$linear_pred[[1]]),
-                 link = x$link[[1]], variance = x$link[[2]], covariance = x$covariance[[1]],
-                 effect = coefs[[1]]),
+                 link = x$link[[1]], variance = x$variance[[1]], covariance = x$covariance[[1]],
+                 effect = effects[[1]]),
     Costs = list(linear_pred = rlang::as_label(x$linear_pred[[2]]),
-                 link = x$link[[2]], variance = x$link[[2]], covariance = x$covariance[[2]],
-                 effect = coefs[[2]])
+                 link = x$link[[2]], variance = x$variance[[2]], covariance = x$covariance[[2]],
+                 effect = effects[[2]])
   )
 }

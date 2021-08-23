@@ -10,16 +10,26 @@ warn_formula_override <- function(lhs) {
 }
 
 stop_not_string <- function(var) {
-  x <- paste0("Argument `", var, "` must be a string scalar")
+  x <- paste0("Argument `", var, "` must be a string scalar.")
   rlang::cnd_signal(rlang::error_cnd("cea_error_not_string", message = x))
 }
 
 stop_not_character <- function(var) {
-  x <- paste0("Argument `", var, "` must be a character vector")
+  x <- paste0("Argument `", var, "` must be a character vector.")
   rlang::cnd_signal(rlang::error_cnd("cea_error_not_character", message = x))
 }
 
 stop_variable_not_found <- function(var, df) {
-  x <- paste0("Can't find column `", var, "` in `", df, "`")
+  x <- paste0("Can't find column `", var, "` in `", df, "`.")
   rlang::cnd_signal(rlang::error_cnd("cea_error_variable_not_found", message = x))
+}
+
+stop_unknown_estimand <- function(estimand) {
+  x <- paste0(
+    "`estimand` must be one of 'ATE', 'ATT', 'ATC'.\n",
+    rlang::format_error_bullets(c(
+      x = paste0("You've provided '", estimand, "'`.")
+    ))
+  )
+  rlang::cnd_signal(rlang::error_cnd("cea_error_unknown_estimand", message = x))
 }

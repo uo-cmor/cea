@@ -6,18 +6,21 @@
     
     QALYs model: QALYs ~ booster + age + sex 
                  * Link function: identity 
-                 * Variance function: log 
+                 * Variance function: constant 
                  * Covariance function: identity 
     
-    Costs model: QALYs ~ booster + age + sex 
-                 * Link function: identity 
-                 * Variance function: log 
+    Costs model: Cost ~ booster + age + sex 
+                 * Link function: log 
+                 * Variance function: tweedie 
                  * Covariance function: identity 
+    
+    Call: estimate(QALYs = "QALYs", costs = "Cost", treatment = "booster", 
+        covars = c("age", "sex"), data = moa2) 
     
     Incremental Treatment Effects:
       QALYs: +0.074 
-      Costs: +2792 
-      ICER: 37492 
+      Costs: +2023 
+      ICER: 27165 
     
     ===============================================
 
