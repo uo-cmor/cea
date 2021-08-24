@@ -15,6 +15,7 @@
 #' @export
 INMB <- function(x, wtp, estimand = "ATE", ...) {
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
+  if (attr(x, "spec") != "formula") stop_not_formula_spec("INMB")
   object <- cea_extract_estimate(x, estimand)
   object$QALYs$effect * wtp - object$Costs$effect
 }
@@ -23,6 +24,7 @@ INMB <- function(x, wtp, estimand = "ATE", ...) {
 #' @export
 INHB <- function(x, wtp, estimand = "ATE", ...) {
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
+  if (attr(x, "spec") != "formula") stop_not_formula_spec("INHB")
   object <- cea_extract_estimate(x, estimand)
   object$QALYs$effect - object$Costs$effect / wtp
 }

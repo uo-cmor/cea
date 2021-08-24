@@ -12,6 +12,7 @@
 #' @export
 ICER <- function(x, estimand = "ATE", ...) {
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
+  if (attr(x, "spec") != "formula") stop_not_formula_spec("ICER")
   object <- cea_extract_estimate(x, estimand)
   object$Costs$effect / object$QALYs$effect
 }
