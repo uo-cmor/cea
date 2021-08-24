@@ -10,7 +10,8 @@ INMB(x, wtp, estimand = "ATE", ...)
 INHB(x, wtp, estimand = "ATE", ...)
 }
 \arguments{
-\item{x}{\code{cea_estimate} object. Fitted CEA regression model.}
+\item{x}{\code{cea_estimate} object. Fitted CEA regression model. Must use the
+default 'formula' specification.}
 
 \item{wtp}{Numeric scalar.}
 
