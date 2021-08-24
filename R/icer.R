@@ -3,8 +3,8 @@
 #' Calculate the incremental cost-effectiveness ratio (ICER) from a fitted
 #'     `cea_estimate` object.
 #'
-#' @param x `cea_estimate` object, fitted CEA regression model. Must use the
-#'     default 'formula' specification.
+#' @param x `cea_estimate` object. The fitted CEA regression model. Must use
+#'     the default 'formula' specification.
 #' @param estimand String scalar. Whether to calculate ICER from the average
 #'     treatment effect (ATE), average treatment effect on the treated (ATT),
 #'     or average treatment effect on the controls (ATC).
