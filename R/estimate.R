@@ -106,8 +106,10 @@ estimate <- function(QALYs, costs, treatment, covars, data,
     matrix_pred <- rep(list(mcglm::mc_id(data)), n_outcome)
   }
 
+  sink(tempfile())
   out <- mcglm::mcglm(linear_pred = linear_pred, matrix_pred = matrix_pred, link = link,
                       variance = variance, data = data, ...)
+  sink()
   class(out) <- c("cea_estimate", class(out))
   attr(out, "spec") <- spec
   attr(out, "call") <- cl

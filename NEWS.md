@@ -1,5 +1,7 @@
 # cea 0.0.0.9000
 
+* Added `boot()` to calculate bootstrap replicates from regression model.
+
 * Added `INMB()` & `INHB()` to calculate INMB/INHB from regression model
   results.
 

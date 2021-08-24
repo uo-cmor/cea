@@ -24,10 +24,8 @@ boot <- function(fit, R, weights = NULL, simple = FALSE, parallel = c("no", "mul
     c(QALYs = res$QALYs$effect, Costs = res$Costs$effect)
   }
 
-  sink(tempfile())
   out <- boot::boot(seq_len(nrow(fit$data)), est_fun, R = R, weights = weights, simple = simple,
                     parallel = parallel, ncpus = ncpus, cl = cl)
-  sink()
 
   class(out) <- c("cea_boot", class(out))
   out
