@@ -9,9 +9,9 @@ ICER(x, estimand = "ATE", ...)
 \arguments{
 \item{x}{\code{cea_estimate} object, fitted CEA regression model.}
 
-\item{estimand}{String scalar. Whether to estimate the average treatment
-effect (ATE), average treatment effect on the treated (ATT), or average
-treatment effect on the controls (ATC).}
+\item{estimand}{String scalar. Whether to calculate ICER from the average
+treatment effect (ATE), average treatment effect on the treated (ATT),
+or average treatment effect on the controls (ATC).}
 
 \item{...}{Not used.}
 }

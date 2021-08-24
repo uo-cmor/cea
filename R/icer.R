@@ -4,9 +4,9 @@
 #'     `cea_estimate` object.
 #'
 #' @param x `cea_estimate` object, fitted CEA regression model.
-#' @param estimand String scalar. Whether to estimate the average treatment
-#'     effect (ATE), average treatment effect on the treated (ATT), or average
-#'     treatment effect on the controls (ATC).
+#' @param estimand String scalar. Whether to calculate ICER from the average
+#'     treatment effect (ATE), average treatment effect on the treated (ATT),
+#'     or average treatment effect on the controls (ATC).
 #' @param ... Not used.
 #'
 #' @export

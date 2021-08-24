@@ -2,4 +2,6 @@
 
 S3method(print,cea_estimate)
 export(ICER)
+export(INHB)
+export(INMB)
 export(estimate)
