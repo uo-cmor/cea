@@ -1,13 +1,4 @@
-fit_mcglm <- mcglm::mcglm(
-  linear_pred = c(QALYs = QALYs ~ booster + age + sex, Costs = Cost ~ booster + age + sex),
-  matrix_pred = list(mcglm::mc_id(moa2), mcglm::mc_id(moa2)),
-  link = c("identity", "log"), variance = c("constant", "tweedie"),
-  data = moa2
-)
-
 test_that("estimate works with default specification", {
-  fit <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2)
-
   expect_s3_class(fit, "cea_estimate")
   expect_s3_class(fit, "mcglm")
   expect_equal(fit, fit_mcglm, ignore_attr = c("class", "spec", "call"), ignore_formula_env = TRUE)
@@ -37,15 +28,9 @@ test_that("estimate gives appropriate messages", {
 })
 
 test_that("estimate works with custom `linear_pred`", {
-  fit <- estimate(
-    linear_pred = c(QALYs = QALYs ~ booster + age + sex, Costs = Cost ~ booster + age + sex),
-    link = c("identity", "log"), variance = c("constant", "tweedie"),
-    data = moa2
-  )
-
-  expect_s3_class(fit, "cea_estimate")
-  expect_s3_class(fit, "mcglm")
-  expect_equal(fit, fit_mcglm, ignore_attr = c("class", "spec", "call"), ignore_formula_env = TRUE)
+  expect_s3_class(fit_lp, "cea_estimate")
+  expect_s3_class(fit_lp, "mcglm")
+  expect_equal(fit_lp, fit_mcglm, ignore_attr = c("class", "spec", "call"), ignore_formula_env = TRUE)
 })
 
 test_that("estimate works with list data", {
@@ -71,15 +56,12 @@ test_that("estimate works with missing covars", {
 })
 
 test_that("print.cea_estimate works", {
-  fit <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2)
   expect_snapshot_output(fit)
   attr(fit, "spec") <- "linear_pred"
   expect_output(print(fit))
 })
 
 test_that("cea_extract_estimate works as expected", {
-  fit <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2)
-
   out <- list(
     QALYs = list(linear_pred = "QALYs ~ booster + age + sex",
                  link = "identity",
@@ -124,8 +106,6 @@ test_that("cea_extract_estimate works as expected", {
 })
 
 test_that("cea_extract_estimate gives appropriate messages", {
-  fit <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2)
-
   expect_error(cea_extract_estimate(fit, estimand = "ABC"), class = "cea_error_unknown_estimand")
 })
 
