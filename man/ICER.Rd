@@ -7,8 +7,8 @@
 ICER(x, estimand = "ATE", ...)
 }
 \arguments{
-\item{x}{\code{cea_estimate} object, fitted CEA regression model. Must use the
-default 'formula' specification.}
+\item{x}{\code{cea_estimate} object. The fitted CEA regression model. Must use
+the default 'formula' specification.}
 
 \item{estimand}{String scalar. Whether to calculate ICER from the average
 treatment effect (ATE), average treatment effect on the treated (ATT),

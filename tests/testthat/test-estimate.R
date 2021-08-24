@@ -57,6 +57,7 @@ test_that("estimate works with missing covars", {
 
 test_that("print.cea_estimate works", {
   expect_snapshot_output(fit)
+  expect_equal(print(fit), fit)
   attr(fit, "spec") <- "linear_pred"
   expect_output(print(fit))
 })

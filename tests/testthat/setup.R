@@ -1,3 +1,6 @@
+sink(tempfile())
+withr::defer(sink(), teardown_env())
+
 fit <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2)
 
 fit_mcglm <- mcglm::mcglm(

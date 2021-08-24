@@ -10,3 +10,8 @@ test_that("boot works as expected", {
   expect_equal(boot_est$sim, "ordinary")
   expect_equal(boot_est$stype, "i")
 })
+
+test_that("boot gives appropriate error messages", {
+  expect_error(boot(fit_mcglm, R = 9), class = "cea_error_not_cea_estimate")
+  expect_error(boot(fit_lp, R = 9), class = "cea_error_not_formula_spec")
+})
