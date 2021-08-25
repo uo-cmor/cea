@@ -10,9 +10,10 @@
 #'     or average treatment effect on the controls (ATC).
 #' @param ... Not used.
 #'
+#' @family treatment effect extractors
+#'
 #' @export
 ICER <- function(x, estimand = "ATE", ...) {
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
-  object <- cea_extract_estimate(x, estimand)
-  object$Costs$effect / object$QALYs$effect
+  Costs(x, estimand) / QALYs(x)
 }

@@ -25,3 +25,10 @@ or average treatment effect on the controls (ATC).}
 Calculate the incremental net monetary benefit (INMB) or incremental net
 health benefit (INHB) from a fitted \code{cea_estimate} object.
 }
+\seealso{
+Other treatment effect extractors: 
+\code{\link{Costs}()},
+\code{\link{ICER}()},
+\code{\link{QALYs}()}
+}
+\concept{treatment effect extractors}

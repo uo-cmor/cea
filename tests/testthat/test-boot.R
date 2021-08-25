@@ -1,7 +1,7 @@
+t0 <- c(QALYs = QALYs(fit), Costs = Costs(fit))
+
 test_that("boot works as expected", {
   boot_est <- boot(fit, R = 9)
-  res <- cea_extract_estimate(fit)
-  t0 <- c(QALYs = res$QALYs$effect, Costs = res$Costs$effect)
 
   expect_s3_class(boot_est, "cea_boot")
   expect_equal(boot_est$t0, t0)
@@ -13,8 +13,6 @@ test_that("boot works as expected", {
 
 test_that("parametric boot works as expected", {
   boot_est <- boot(fit, R = 9, sim = "parametric")
-  res <- cea_extract_estimate(fit)
-  t0 <- c(QALYs = res$QALYs$effect, Costs = res$Costs$effect)
 
   expect_s3_class(boot_est, "cea_boot")
   expect_equal(boot_est$t0, t0)

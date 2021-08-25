@@ -11,19 +11,19 @@
 #'     or average treatment effect on the controls (ATC).
 #' @param ... Not used.
 #'
+#' @family treatment effect extractors
+#'
 #' @aliases INHB
 #'
 #' @export
 INMB <- function(x, wtp, estimand = "ATE", ...) {
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
-  object <- cea_extract_estimate(x, estimand)
-  object$QALYs$effect * wtp - object$Costs$effect
+  QALYs(x) * wtp - Costs(x, estimand)
 }
 
 #' @rdname INMB
 #' @export
 INHB <- function(x, wtp, estimand = "ATE", ...) {
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
-  object <- cea_extract_estimate(x, estimand)
-  object$QALYs$effect - object$Costs$effect / wtp
+  QALYs(x) - Costs(x, estimand) / wtp
 }

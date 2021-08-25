@@ -2,9 +2,11 @@
 
 S3method(print,cea_ci)
 S3method(print,cea_estimate)
+export(Costs)
 export(ICER)
 export(INHB)
 export(INMB)
+export(QALYs)
 export(boot)
 export(ci)
 export(estimate)

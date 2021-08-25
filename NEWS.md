@@ -1,5 +1,7 @@
 # cea 0.0.0.9000
 
+* Added `QALYs()` and `Costs()` to extract fitted regression components.
+
 * Added `ci()` to calculate bootstrap confidence intervals from regression
   model.
   

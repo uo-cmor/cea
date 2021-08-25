@@ -23,8 +23,7 @@ boot <- function(x, R, sim = "ordinary", weights = NULL, simple = FALSE,
   if (missing(parallel)) parallel <- getOption("cea.boot.parallel", "no")
   if (sim == "parametric") {
     par_fun <- function(data) {
-      res <- cea_extract_estimate(data)
-      c(QALYs = res$QALYs$effect, Costs = res$Costs$effect)
+      c(QALYs = QALYs(data), Costs = Costs(data))
     }
     ran_fun <- function(data, mle) {
       out <- data
@@ -44,8 +43,7 @@ boot <- function(x, R, sim = "ordinary", weights = NULL, simple = FALSE,
       call. <- attr(x, "call")
       call.$data <- x$data[i, ]
       fit_boot <- eval(call.)
-      res <- cea_extract_estimate(fit_boot)
-      c(QALYs = res$QALYs$effect, Costs = res$Costs$effect)
+      c(QALYs = QALYs(fit_boot), Costs = Costs(fit_boot))
     }
     out <- eval(rlang::expr(boot::boot(
       seq_len(!!nrow(x$data)), est_fun, R = !!R, sim = !!sim, weights = !!weights,
