@@ -1,4 +1,27 @@
-ci <- function(x, outcomes = "INMB", method = "boot", R, conf = 0.9, type = "bca", wtp, ...) {
+#' Confidence Intervals for CEA Estimates
+#'
+#' Generate confidence intervals for mean incremental QALYs, costs, net
+#'     monetary benefit (INMB), and net health benefit (INHB) from a fitted CEA
+#'      regression model.
+#' @param x `cea_estimate` object. The fitted CEA regression model. Must use
+#'     the default 'formula' specification.
+#' @param outcomes A character vector indicating the outcomes to be calculated.
+#'     Possible values are "QALYs", "Costs", "INMB", or "INHB".
+#' @param conf Confidence level of the required intervals.
+#' @param method Which method to use. Currently only 'boot' (bootstrap) is
+#'     implemented.
+#' @param R The number of bootstrap replicates.
+#' @param sim A character vector indicating the type of simulation required.
+#'     Possible values are "ordinary" (the default), "parametric", "balanced",
+#'     or "permutation".
+#' @param type Which type of intervals are required. Possible values are
+#'     "norm", "basic", "perc", or "bca".
+#' @param wtp Willingness-to-pay level for calculation of INMB & INHB.
+#' @param ... Passed to \code{\link{boot}}.
+#'
+#' @export
+ci <- function(x, outcomes = "INMB", conf = 0.9, method = "boot", R, sim = "ordinary", type = "bca",
+               wtp, ...) {
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
   if (attr(x, "spec") != "formula") stop_not_formula_spec("ICER")
   if (!identical(method, "boot")) stop_unknown_method(method)
@@ -8,7 +31,9 @@ ci <- function(x, outcomes = "INMB", method = "boot", R, conf = 0.9, type = "bca
   if (method == "boot" && missing(R)) stop_missing_R()
   if (!(type %in% c("perc", "norm", "basic", "bca"))) stop_invalid_ci_type(type)
   if (type == "bca" & R < nrow(x$data)) stop_R_too_small(R, nrow(x$data))
-  boot_est <- boot(x, R = R, ...)
+  if (type == "bca" & sim == "parametric") stop_invalid_bca_parametric()
+
+  boot_est <- boot(x, R = R, sim = sim, ...)
 
   out <- list()
   for (i in outcomes) {
@@ -30,8 +55,9 @@ ci <- function(x, outcomes = "INMB", method = "boot", R, conf = 0.9, type = "bca
   colnames(out) <- c("Lower", "Upper")
   class(out) <- "cea_ci"
   attr(out, "conf") <- conf
-  attr(out, "type") <- type
-  attr(out, "R") <- R
+  if (method == "boot") attr(out, "type") <- type
+  if (method == "boot") attr(out, "R") <- R
+  if (method == "boot") attr(out, "sim") <- sim
 
   out
 }
@@ -50,9 +76,11 @@ print.cea_ci <- function(x, ...) {
   attr(x, "type") <- NULL
   R <- attr(x, "R")
   attr(x, "R") <- NULL
+  sim <- attr(x, "sim")
+  attr(x, "sim") <- NULL
 
   cat(conf, "% CONFIDENCE INTERVALS:\n", sep = "")
-  cat("Based on", R, "bootstrap replicates\n")
+  cat("Based on", R, sim, "bootstrap replicates\n")
   cat("Intervals calculated using", type, "method\n\n")
   print(unclass(x))
 

@@ -7,6 +7,7 @@
 boot(
   x,
   R,
+  sim = "ordinary",
   weights = NULL,
   simple = FALSE,
   parallel = c("no", "multicore", "snow"),
@@ -20,6 +21,10 @@ the default 'formula' specification.}
 
 \item{R}{The number of bootstrap replicates.}
 
+\item{sim}{A character vector indicating the type of simulation required.
+Possible values are "ordinary" (the default), "parametric", "balanced",
+or "permutation".}
+
 \item{weights, simple, parallel, ncpus, cl}{Passed to \verb{\link[boot]\{boot\}}. For
 \code{parallel} and \code{ncpus}, default values are taken from
 \code{getOption(cea.boot.parallel)} and \code{getOption(cea.boot.ncpus)} instead
@@ -27,6 +32,5 @@ of their \code{boot}-package equivalents.}
 }
 \description{
 Generate R bootstrap replicates of mean incremental QALYs and Costs from a
-fitted CEA regression model, using the \code{boot} package. Only the ordinary
-nonparametric bootstrap is currently implemented.
+fitted CEA regression model, using the \code{boot} package.
 }

@@ -53,3 +53,8 @@ stop_R_too_small <- function(R, N) {
   )
   rlang::cnd_signal(rlang::error_cnd("cea_error_R_too_small", message = x))
 }
+
+stop_invalid_bca_parametric <- function() {
+  x <- "`type` = 'bca' cannot be used with `sim` = 'parametric'"
+  rlang::cnd_signal(rlang::error_cnd("cea_error_invalid_bca_parametric", message = x))
+}

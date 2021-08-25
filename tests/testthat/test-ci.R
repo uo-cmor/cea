@@ -22,6 +22,8 @@ test_that("ci gives appropriate error messages", {
   expect_error(ci(fit, wtp = 60000, R = 1, type = "stud"), class = "cea_error_invalid_ci_type")
   expect_error(ci(fit, wtp = 60000, R = 1, type = "all"), class = "cea_error_invalid_ci_type")
   expect_error(ci(fit, wtp = 60000, R = 1), class = "cea_error_R_too_small")
+  expect_error(ci(fit, wtp = 60000, R = 39, sim = "parametric"),
+               class = "cea_error_invalid_bca_parametric")
 })
 
 test_that("print.cea_ci works", {
