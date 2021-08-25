@@ -26,7 +26,6 @@ test_that("parametric boot works as expected", {
 
 test_that("boot gives appropriate error messages", {
   expect_error(boot(fit_mcglm, R = 9), class = "cea_error_not_cea_estimate")
-  expect_error(boot(fit_lp, R = 9), class = "cea_error_not_formula_spec")
   expect_error(boot(fit, sim = "antithetic"), class = "cea_error_unknown_sim")
   expect_error(boot(fit, sim = "abc"), class = "cea_error_unknown_sim")
 })

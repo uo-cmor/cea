@@ -19,7 +19,6 @@ boot <- function(x, R, sim = "ordinary", weights = NULL, simple = FALSE,
                  parallel = c("no", "multicore", "snow"), ncpus = getOption("cea.boot.ncpus", 1L),
                  cl = NULL) {
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
-  if (attr(x, "spec") != "formula") stop_not_formula_spec("ICER")
   if (!(sim %in% c("ordinary", "parametric", "balanced", "permutation"))) stop_unknown_sim(sim)
   if (missing(parallel)) parallel <- getOption("cea.boot.parallel", "no")
   if (sim == "parametric") {

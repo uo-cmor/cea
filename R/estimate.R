@@ -63,6 +63,9 @@
 #'     function for Costs.
 #' @param ... Optional arguments to be passed to \code{\link[mcglm]{mcglm}}.
 #'
+#' @return If `linear_pred` is specified, an object of class `mcglm`; otherwise
+#'     an object of class `cea_estimate` inheriting from `mcglm`.
+#'
 #' @export
 estimate <- function(QALYs, costs, treatment, covars, data,
                      linear_pred = NULL, matrix_pred = NULL, link = NULL, variance = NULL, ...) {
@@ -110,41 +113,39 @@ estimate <- function(QALYs, costs, treatment, covars, data,
   out <- mcglm::mcglm(linear_pred = linear_pred, matrix_pred = matrix_pred, link = link,
                       variance = variance, data = data, ...)
   sink()
-  class(out) <- c("cea_estimate", class(out))
-  attr(out, "spec") <- spec
-  attr(out, "call") <- cl
+  if (spec == "formula") {
+    class(out) <- c("cea_estimate", class(out))
+    attr(out, "call") <- cl
+  }
   out
 }
 
 #' @export
 print.cea_estimate <- function(x, ...) {
-  if (attr(x, "spec") == "formula") {
-    object <- cea_extract_estimate(x)
-    cat("===============================================\n")
-    cat("=== Cost-Effectiveness Regression Estimates ===\n")
-    cat("===============================================\n\n")
+  object <- cea_extract_estimate(x)
+  cat("===============================================\n")
+  cat("=== Cost-Effectiveness Regression Estimates ===\n")
+  cat("===============================================\n\n")
 
-    cat("QALYs model:", rlang::as_string(object$QALYs$linear_pred), "\n")
-    cat("             * Link function:", object$QALYs$link, "\n")
-    cat("             * Variance function:", object$QALYs$variance, "\n")
-    cat("             * Covariance function:", object$QALYs$covariance, "\n\n")
-    cat("Costs model:", rlang::as_string(object$Costs$linear_pred), "\n")
-    cat("             * Link function:", object$Costs$link, "\n")
-    cat("             * Variance function:",object$Costs$variance, "\n")
-    cat("             * Covariance function:", object$Costs$covariance, "\n\n")
+  cat("QALYs model:", rlang::as_string(object$QALYs$linear_pred), "\n")
+  cat("             * Link function:", object$QALYs$link, "\n")
+  cat("             * Variance function:", object$QALYs$variance, "\n")
+  cat("             * Covariance function:", object$QALYs$covariance, "\n\n")
+  cat("Costs model:", rlang::as_string(object$Costs$linear_pred), "\n")
+  cat("             * Link function:", object$Costs$link, "\n")
+  cat("             * Variance function:",object$Costs$variance, "\n")
+  cat("             * Covariance function:", object$Costs$covariance, "\n\n")
 
-    cat("Call:", rlang::quo_text(attr(x, "call")), "\n\n")
+  cat("Call:", rlang::quo_text(attr(x, "call")), "\n\n")
 
-    cat("Incremental Treatment Effects:\n")
-    cat("  QALYs:", sprintf("%+1.3f", object$QALYs$effect), "\n")
-    cat("  Costs:", sprintf("%+1.0f", object$Costs$effect), "\n")
-    cat("  ICER:", sprintf("%1.0f", object$Costs$effect/object$QALYs$effect), "\n\n")
+  cat("Incremental Treatment Effects:\n")
+  cat("  QALYs:", sprintf("%+1.3f", object$QALYs$effect), "\n")
+  cat("  Costs:", sprintf("%+1.0f", object$Costs$effect), "\n")
+  cat("  ICER:", sprintf("%1.0f", object$Costs$effect/object$QALYs$effect), "\n\n")
 
-    cat("===============================================\n")
+  cat("===============================================\n")
 
-    return(invisible(x))
-  }
-  NextMethod()
+  return(invisible(x))
 }
 
 cea_extract_estimate <- function(x, estimand = "ATE") {

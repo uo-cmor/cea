@@ -14,7 +14,6 @@ test_that("ci works as expected", {
 
 test_that("ci gives appropriate error messages", {
   expect_error(ci(fit_mcglm), class = "cea_error_not_cea_estimate")
-  expect_error(ci(fit_lp), class = "cea_error_not_formula_spec")
   expect_error(ci(fit, method = "x"), class = "cea_error_unknown_method")
   expect_error(ci(fit, outcomes = c("QALYs", "costs")), class = "cea_error_unknown_outcome")
   expect_error(ci(fit), class = "cea_error_missing_wtp")

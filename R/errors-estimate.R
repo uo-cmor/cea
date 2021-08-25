@@ -2,8 +2,10 @@ warn_formula_override <- function(lhs) {
   x <- paste0(
     "`linear_pred` specification used in place of `formula`.\n",
     rlang::format_error_bullets(c(
-      i = paste0("Provide only one of `linear_pred` or `formula` to silence ",
-                 "this warning.")
+      i = paste("Returned object will have class `mcglm` and will not work",
+                "with other `cea`-package functions"),
+      i = paste("Provide only one of `linear_pred` or `formula` to create",
+                "`cea_estimate` objects.")
     ))
   )
   rlang::cnd_signal(rlang::warning_cnd("cea_warning_formula_override", message = x))

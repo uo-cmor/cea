@@ -23,7 +23,6 @@
 ci <- function(x, outcomes = "INMB", conf = 0.9, method = "boot", R, sim = "ordinary", type = "bca",
                wtp, ...) {
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
-  if (attr(x, "spec") != "formula") stop_not_formula_spec("ICER")
   if (!identical(method, "boot")) stop_unknown_method(method)
   if (!all(outcomes %in% c("QALYs", "Costs", "INMB", "INHB")))
     stop_unknown_outcome(outcomes[which.max(!(outcomes %in% c("QALYs", "Costs", "INMB", "INHB")))])

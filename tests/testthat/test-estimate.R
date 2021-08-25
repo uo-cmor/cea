@@ -28,17 +28,17 @@ test_that("estimate gives appropriate messages", {
 })
 
 test_that("estimate works with custom `linear_pred`", {
-  expect_s3_class(fit_lp, "cea_estimate")
   expect_s3_class(fit_lp, "mcglm")
-  expect_equal(fit_lp, fit_mcglm, ignore_attr = c("class", "spec", "call"), ignore_formula_env = TRUE)
+  expect_equal(fit_lp, fit_mcglm, ignore_formula_env = TRUE)
 })
 
 test_that("estimate works with list data", {
-  fit <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = as.list(moa2))
+  moa2 <- as.list(moa2)
+  fit_list <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2)
 
   expect_s3_class(fit, "cea_estimate")
   expect_s3_class(fit, "mcglm")
-  expect_equal(fit, fit_mcglm, ignore_attr = c("class", "spec", "call"), ignore_formula_env = TRUE)
+  expect_equal(fit_list, fit, ignore_formula_env = TRUE)
 })
 
 test_that("estimate works with missing covars", {

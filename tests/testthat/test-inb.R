@@ -4,7 +4,6 @@ test_that("INMB works as expected", {
 
 test_that("INMB gives appropriate error messages", {
   expect_error(INMB(fit_mcglm, 60000), class = "cea_error_not_cea_estimate")
-  expect_error(INMB(fit_lp, 60000), class = "cea_error_not_formula_spec")
 })
 
 test_that("INHB works as expected", {
@@ -13,5 +12,4 @@ test_that("INHB works as expected", {
 
 test_that("INHB gives appropriate error messages", {
   expect_error(INHB(fit_mcglm, 60000), class = "cea_error_not_cea_estimate")
-  expect_error(INHB(fit_lp, 60000), class = "cea_error_not_formula_spec")
 })

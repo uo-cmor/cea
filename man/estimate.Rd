@@ -53,6 +53,10 @@ function for Costs.}
 
 \item{...}{Optional arguments to be passed to \code{\link[mcglm]{mcglm}}.}
 }
+\value{
+If \code{linear_pred} is specified, an object of class \code{mcglm}; otherwise
+an object of class \code{cea_estimate} inheriting from \code{mcglm}.
+}
 \description{
 Estimate a multivariate covariance generalised linear model (\cite{Bonat &
 Jørgensen 2016}) for the joint incremental costs and QALYs from a
