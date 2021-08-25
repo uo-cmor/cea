@@ -32,5 +32,5 @@ test_that("print.cea_ci works", {
     class = "cea_ci", conf = 0.8, type = "bca", R = 99
   )
   expect_snapshot_output(ci_ex)
-  expect_equal(print(ci_ex), ci_ex)
+  with_sink(tempfile(), expect_equal(print(ci_ex), ci_ex))
 })

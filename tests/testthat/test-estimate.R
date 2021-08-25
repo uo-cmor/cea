@@ -43,11 +43,14 @@ test_that("estimate works with list data", {
 
 test_that("estimate works with missing covars", {
   fit <- estimate("QALYs", "Cost", "booster", data = moa2)
-  fit2 <- mcglm::mcglm(
-    linear_pred = c(QALYs = QALYs ~ booster, Costs = Cost ~ booster),
-    matrix_pred = list(mcglm::mc_id(moa2), mcglm::mc_id(moa2)),
-    link = c("identity", "log"), variance = c("constant", "tweedie"),
-    data = moa2
+  fit2 <- with_sink(
+    tempfile(),
+    mcglm::mcglm(
+      linear_pred = c(QALYs = QALYs ~ booster, Costs = Cost ~ booster),
+      matrix_pred = list(mcglm::mc_id(moa2), mcglm::mc_id(moa2)),
+      link = c("identity", "log"), variance = c("constant", "tweedie"),
+      data = moa2
+    )
   )
 
   expect_s3_class(fit, "cea_estimate")
@@ -57,7 +60,7 @@ test_that("estimate works with missing covars", {
 
 test_that("print.cea_estimate works", {
   expect_snapshot_output(fit)
-  expect_equal(print(fit), fit)
+  with_sink(tempfile(), expect_equal(print(fit), fit))
   attr(fit, "spec") <- "linear_pred"
   expect_output(print(fit))
 })

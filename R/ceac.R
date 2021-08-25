@@ -1,0 +1,53 @@
+#' Cost-Effectiveness Acceptability Curves
+#'
+#' Generate a cost-effectiveness acceptability curve (CEAC) from a fitted CEA
+#'      regression model.
+#' @param x `cea_estimate` object. The fitted CEA regression model. Must use
+#'     the default 'formula' specification.
+#' @param method Which method to use. Currently only 'boot' (bootstrap) is
+#'     implemented.
+#' @param R The number of bootstrap replicates.
+#' @param sim A character vector indicating the type of simulation required.
+#'     Possible values are "ordinary" (the default), "parametric", "balanced",
+#'     or "permutation".
+#' @param wtp_max Maximum willingness-to-pay level for calculation.
+#' @param wtp_step Interval between calculated willingness-to-pay levels.
+#' @param ... Passed to \code{\link{boot}}.
+#'
+#' @export
+ceac <- function(x, method = "boot", R, sim = "ordinary", wtp_max, wtp_step, ...) {
+  if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
+  if (!identical(method, "boot")) stop_unknown_method(method)
+  if (method == "boot" && missing(R)) stop_missing_R()
+
+  wtp <- seq.int(0, wtp_max, wtp_step)
+  boot_est <- boot(x, R = R, sim = sim, ...)
+
+  out <- tibble::tibble(
+    wtp = wtp,
+    ceac = colMeans((boot_est$t %*% rbind(wtp, -1)) > 0)
+  )
+
+  class(out) <- c("cea_ceac", class(out))
+  if (method == "boot") attr(out, "R") <- R
+  if (method == "boot") attr(out, "sim") <- sim
+
+  out
+}
+
+#' @importFrom ggplot2 autoplot
+#'
+#' @export
+autoplot.cea_ceac <- function(object, ...) {
+  ggplot2::ggplot(object, ggplot2::aes(.data$wtp, .data$ceac)) +
+    ggplot2::geom_line() +
+    ggplot2::xlab("Willingness-to-pay threshold") + ggplot2::ylab("CEAC") +
+    ggplot2::scale_y_continuous(labels = scales::label_percent(accuracy = 1),
+                                limits = c(0, 1)) +
+    ggplot2::scale_x_continuous(labels = scales::label_dollar())
+}
+
+#' @export
+plot.cea_ceac <- function(x, ...) {
+  print(autoplot(x, ...))
+}
