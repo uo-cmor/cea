@@ -2,28 +2,41 @@
 % Please edit documentation in R/ci.R
 \name{ci}
 \alias{ci}
+\alias{ci.cea_estimate}
+\alias{ci.cea_boot}
 \title{Confidence Intervals for CEA Estimates}
 \usage{
-ci(
+ci(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, ...)
+
+\method{ci}{cea_estimate}(
   x,
   outcomes = "INMB",
   conf = 0.9,
+  type = "bca",
+  wtp,
   method = "boot",
   R,
   sim = "ordinary",
-  type = "bca",
-  wtp,
   ...
 )
+
+\method{ci}{cea_boot}(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, ...)
 }
 \arguments{
-\item{x}{\code{cea_estimate} object. The fitted CEA regression model. Must use
-the default 'formula' specification.}
+\item{x}{\code{cea_estimate} or \code{cea_boot} object. The fitted CEA regression
+model or bootstrap resampling from the fitted model.}
 
 \item{outcomes}{A character vector indicating the outcomes to be calculated.
 Possible values are "QALYs", "Costs", "INMB", or "INHB".}
 
 \item{conf}{Confidence level of the required intervals.}
+
+\item{type}{Which type of intervals are required. Possible values are
+"norm", "basic", "perc", or "bca".}
+
+\item{wtp}{Willingness-to-pay level for calculation of INMB & INHB.}
+
+\item{...}{Passed to \code{\link{boot}}.}
 
 \item{method}{Which method to use. Currently only 'boot' (bootstrap) is
 implemented.}
@@ -33,13 +46,6 @@ implemented.}
 \item{sim}{A character vector indicating the type of simulation required.
 Possible values are "ordinary" (the default), "parametric", "balanced",
 or "permutation".}
-
-\item{type}{Which type of intervals are required. Possible values are
-"norm", "basic", "perc", or "bca".}
-
-\item{wtp}{Willingness-to-pay level for calculation of INMB & INHB.}
-
-\item{...}{Passed to \code{\link{boot}}.}
 }
 \description{
 Generate confidence intervals for mean incremental QALYs, costs, net

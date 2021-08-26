@@ -15,3 +15,6 @@ fit_lp <- estimate(
   link = c("identity", "log"), variance = c("constant", "tweedie"),
   data = moa2
 )
+
+boot_est <- boot(fit, R = 9)
+boot_est_par <- boot(fit, R = 9, sim = "parametric")

@@ -1,8 +1,6 @@
 t0 <- c(QALYs = QALYs(fit), Costs = Costs(fit))
 
 test_that("boot works as expected", {
-  boot_est <- boot(fit, R = 9)
-
   expect_s3_class(boot_est, "cea_boot")
   expect_equal(boot_est$t0, t0)
   expect_equal(dim(boot_est$t), c(9, 2))
@@ -12,13 +10,11 @@ test_that("boot works as expected", {
 })
 
 test_that("parametric boot works as expected", {
-  boot_est <- boot(fit, R = 9, sim = "parametric")
-
-  expect_s3_class(boot_est, "cea_boot")
-  expect_equal(boot_est$t0, t0)
-  expect_equal(dim(boot_est$t), c(9, 2))
-  expect_equal(boot_est$R, 9)
-  expect_equal(boot_est$sim, "parametric")
+  expect_s3_class(boot_est_par, "cea_boot")
+  expect_equal(boot_est_par$t0, t0)
+  expect_equal(dim(boot_est_par$t), c(9, 2))
+  expect_equal(boot_est_par$R, 9)
+  expect_equal(boot_est_par$sim, "parametric")
 })
 
 

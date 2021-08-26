@@ -3,26 +3,31 @@
 #' Generate confidence intervals for mean incremental QALYs, costs, net
 #'     monetary benefit (INMB), and net health benefit (INHB) from a fitted CEA
 #'      regression model.
-#' @param x `cea_estimate` object. The fitted CEA regression model. Must use
-#'     the default 'formula' specification.
+#' @param x `cea_estimate` or `cea_boot` object. The fitted CEA regression
+#'     model or bootstrap resampling from the fitted model.
 #' @param outcomes A character vector indicating the outcomes to be calculated.
 #'     Possible values are "QALYs", "Costs", "INMB", or "INHB".
 #' @param conf Confidence level of the required intervals.
+#' @param type Which type of intervals are required. Possible values are
+#'     "norm", "basic", "perc", or "bca".
+#' @param wtp Willingness-to-pay level for calculation of INMB & INHB.
 #' @param method Which method to use. Currently only 'boot' (bootstrap) is
 #'     implemented.
 #' @param R The number of bootstrap replicates.
 #' @param sim A character vector indicating the type of simulation required.
 #'     Possible values are "ordinary" (the default), "parametric", "balanced",
 #'     or "permutation".
-#' @param type Which type of intervals are required. Possible values are
-#'     "norm", "basic", "perc", or "bca".
-#' @param wtp Willingness-to-pay level for calculation of INMB & INHB.
 #' @param ... Passed to \code{\link{boot}}.
 #'
 #' @export
-ci <- function(x, outcomes = "INMB", conf = 0.9, method = "boot", R, sim = "ordinary", type = "bca",
-               wtp, ...) {
-  if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
+ci <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, ...) {
+  UseMethod("ci")
+}
+
+#' @rdname ci
+#' @export
+ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, method = "boot", R,
+                            sim = "ordinary", ...) {
   if (!identical(method, "boot")) stop_unknown_method(method)
   if (!all(outcomes %in% c("QALYs", "Costs", "INMB", "INHB")))
     stop_unknown_outcome(outcomes[which.max(!(outcomes %in% c("QALYs", "Costs", "INMB", "INHB")))])
@@ -57,6 +62,43 @@ ci <- function(x, outcomes = "INMB", conf = 0.9, method = "boot", R, sim = "ordi
   if (method == "boot") attr(out, "type") <- type
   if (method == "boot") attr(out, "R") <- R
   if (method == "boot") attr(out, "sim") <- sim
+
+  out
+}
+
+#' @rdname ci
+#' @export
+ci.cea_boot <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, ...) {
+  if (!all(outcomes %in% c("QALYs", "Costs", "INMB", "INHB")))
+    stop_unknown_outcome(outcomes[which.max(!(outcomes %in% c("QALYs", "Costs", "INMB", "INHB")))])
+  if (any(c("INMB", "INHB") %in% outcomes) && missing(wtp)) stop_missing_wtp()
+  if (!(type %in% c("perc", "norm", "basic", "bca"))) stop_invalid_ci_type(type)
+  if (type == "bca" & x$sim == "parametric") stop_invalid_bca_parametric()
+  if (type == "bca" & x$R < length(x$data)) stop_R_too_small(x$R, length(x$data))
+
+  out <- list()
+  for (i in outcomes) {
+    out[[i]] <- switch(
+      i,
+      QALYs = boot::boot.ci(x, conf = conf, type = type, index = 1),
+      Costs = boot::boot.ci(x, conf = conf, type = type, index = 2),
+      INMB = boot::boot.ci(x, conf = conf, type = type,
+                           t0 = rlang::set_names(x$t0[1] * wtp - x$t0[2], "INMB"),
+                           t = x$t[, 1] * wtp - x$t[, 2]),
+      INHB = boot::boot.ci(x, conf = conf, type = type,
+                           t0 = rlang::set_names(x$t0[1] - x$t0[2] / wtp, "INHB"),
+                           t = x$t[, 1] - x$t[, 2] / wtp)
+    )
+    out[[i]] <- out[[i]][[4]][1, ncol(out[[i]][[4]]) - (1:0)]
+  }
+
+  out <- rlang::exec(rbind, !!!out)
+  colnames(out) <- c("Lower", "Upper")
+  class(out) <- "cea_ci"
+  attr(out, "conf") <- conf
+  attr(out, "type") <- type
+  attr(out, "R") <- x$R
+  attr(out, "sim") <- x$sim
 
   out
 }
