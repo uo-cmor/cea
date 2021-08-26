@@ -6,7 +6,7 @@
 \alias{ci.cea_boot}
 \title{Confidence Intervals for CEA Estimates}
 \usage{
-ci(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, ...)
+ci(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE", ...)
 
 \method{ci}{cea_estimate}(
   x,
@@ -14,6 +14,7 @@ ci(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, ...)
   conf = 0.9,
   type = "bca",
   wtp,
+  estimand = "ATE",
   method = "boot",
   R,
   sim = "ordinary",
@@ -35,6 +36,10 @@ Possible values are "QALYs", "Costs", "INMB", or "INHB".}
 "norm", "basic", "perc", or "bca".}
 
 \item{wtp}{Willingness-to-pay level for calculation of INMB & INHB.}
+
+\item{estimand}{String scalar. Whether to calculate the average treatment
+effect (ATE), average treatment effect on the treated (ATT), or average
+treatment effect on the controls (ATC). Only used for non-linear models.}
 
 \item{...}{Passed to \code{\link{boot}}.}
 

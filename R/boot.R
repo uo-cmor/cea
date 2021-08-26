@@ -6,6 +6,9 @@
 #' @param x `cea_estimate` object. The fitted CEA regression model. Must use
 #'     the default 'formula' specification.
 #' @param R The number of bootstrap replicates.
+#' @param estimand String scalar. Whether to calculate the average treatment
+#'     effect (ATE), average treatment effect on the treated (ATT), or average
+#'     treatment effect on the controls (ATC). Only used for non-linear models.
 #' @param sim A character vector indicating the type of simulation required.
 #'     Possible values are "ordinary" (the default), "parametric", "balanced",
 #'     or "permutation".
@@ -15,15 +18,15 @@
 #'     of their `boot`-package equivalents.
 #'
 #' @export
-boot <- function(x, R, sim = "ordinary", weights = NULL, simple = FALSE,
-                 parallel = c("no", "multicore", "snow"), ncpus = getOption("cea.boot.ncpus", 1L),
-                 cl = NULL) {
+boot <- function(x, R, estimand = "ATE", sim = "ordinary", weights = NULL,
+                 simple = FALSE, parallel = c("no", "multicore", "snow"),
+                 ncpus = getOption("cea.boot.ncpus", 1L), cl = NULL) {
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
   if (!(sim %in% c("ordinary", "parametric", "balanced", "permutation"))) stop_unknown_sim(sim)
   if (missing(parallel)) parallel <- getOption("cea.boot.parallel", "no")
   if (sim == "parametric") {
     par_fun <- function(data) {
-      c(QALYs = QALYs(data), Costs = Costs(data))
+      c(QALYs = QALYs(data, estimand), Costs = Costs(data, estimand))
     }
     ran_fun <- function(data, mle) {
       out <- data
@@ -43,7 +46,7 @@ boot <- function(x, R, sim = "ordinary", weights = NULL, simple = FALSE,
       call. <- attr(x, "call")
       call.$data <- x$data[i, ]
       fit_boot <- eval(call.)
-      c(QALYs = QALYs(fit_boot), Costs = Costs(fit_boot))
+      c(QALYs = QALYs(fit_boot, estimand), Costs = Costs(fit_boot, estimand))
     }
     out <- eval(rlang::expr(boot::boot(
       seq_len(!!nrow(x$data)), est_fun, R = !!R, sim = !!sim, weights = !!weights,

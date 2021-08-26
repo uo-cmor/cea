@@ -1,7 +1,8 @@
 test_that("estimate works with default specification", {
   expect_s3_class(fit, "cea_estimate")
   expect_s3_class(fit, "mcglm")
-  expect_equal(fit, fit_mcglm, ignore_attr = c("class", "spec", "call"), ignore_formula_env = TRUE)
+  expect_equal(fit, fit_mcglm,
+               ignore_attr = c("class", "tx", "call"), ignore_formula_env = TRUE)
 })
 
 test_that("estimate gives appropriate messages", {
@@ -29,7 +30,8 @@ test_that("estimate gives appropriate messages", {
 
 test_that("estimate works with custom `linear_pred`", {
   expect_s3_class(fit_lp, "mcglm")
-  expect_equal(fit_lp, fit_mcglm, ignore_formula_env = TRUE)
+  expect_equal(fit_lp, fit_mcglm,
+               ignore_attr = c("class", "tx", "call"), ignore_formula_env = TRUE)
 })
 
 test_that("estimate works with list data", {
@@ -55,12 +57,10 @@ test_that("estimate works with missing covars", {
 
   expect_s3_class(fit, "cea_estimate")
   expect_s3_class(fit, "mcglm")
-  expect_equal(fit, fit2, ignore_attr = c("class", "spec", "call"), ignore_formula_env = TRUE)
+  expect_equal(fit, fit2, ignore_attr = c("class", "tx", "call"), ignore_formula_env = TRUE)
 })
 
 test_that("print.cea_estimate works", {
   expect_snapshot_output(fit)
   with_sink(tempfile(), expect_equal(print(fit), fit))
-  attr(fit, "spec") <- "linear_pred"
-  expect_output(print(fit))
 })

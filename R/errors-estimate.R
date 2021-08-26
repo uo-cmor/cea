@@ -25,13 +25,3 @@ stop_variable_not_found <- function(var, df) {
   x <- paste0("Can't find column `", var, "` in `", df, "`.")
   rlang::cnd_signal(rlang::error_cnd("cea_error_variable_not_found", message = x))
 }
-
-stop_unknown_estimand <- function(estimand) {
-  x <- paste0(
-    "`estimand` must be one of 'ATE', 'ATT', 'ATC'.\n",
-    rlang::format_error_bullets(c(
-      x = paste0("You've provided '", estimand, "'`.")
-    ))
-  )
-  rlang::cnd_signal(rlang::error_cnd("cea_error_unknown_estimand", message = x))
-}

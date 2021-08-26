@@ -4,6 +4,9 @@
 #'      regression model.
 #' @param x `cea_estimate` object. The fitted CEA regression model. Must use
 #'     the default 'formula' specification.
+#' @param estimand String scalar. Whether to calculate the average treatment
+#'     effect (ATE), average treatment effect on the treated (ATT), or average
+#'     treatment effect on the controls (ATC). Only used for non-linear models.
 #' @param method Which method to use. Currently only 'boot' (bootstrap) is
 #'     implemented.
 #' @param R The number of bootstrap replicates.
@@ -15,13 +18,14 @@
 #' @param ... Passed to \code{\link{boot}}.
 #'
 #' @export
-ceac <- function(x, method = "boot", R, sim = "ordinary", wtp_max, wtp_step, ...) {
+ceac <- function(x, estimand = "ATE", method = "boot", R, sim = "ordinary",
+                 wtp_max, wtp_step, ...) {
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
   if (!identical(method, "boot")) stop_unknown_method(method)
   if (method == "boot" && missing(R)) stop_missing_R()
 
   wtp <- seq.int(0, wtp_max, wtp_step)
-  boot_est <- boot(x, R = R, sim = sim, ...)
+  boot_est <- boot(x, R = R, estimand = estimand, sim = sim, ...)
 
   out <- tibble::tibble(
     wtp = wtp,

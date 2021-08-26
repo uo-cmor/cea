@@ -4,11 +4,24 @@
 \alias{ceac}
 \title{Cost-Effectiveness Acceptability Curves}
 \usage{
-ceac(x, method = "boot", R, sim = "ordinary", wtp_max, wtp_step, ...)
+ceac(
+  x,
+  estimand = "ATE",
+  method = "boot",
+  R,
+  sim = "ordinary",
+  wtp_max,
+  wtp_step,
+  ...
+)
 }
 \arguments{
 \item{x}{\code{cea_estimate} object. The fitted CEA regression model. Must use
 the default 'formula' specification.}
+
+\item{estimand}{String scalar. Whether to calculate the average treatment
+effect (ATE), average treatment effect on the treated (ATT), or average
+treatment effect on the controls (ATC). Only used for non-linear models.}
 
 \item{method}{Which method to use. Currently only 'boot' (bootstrap) is
 implemented.}

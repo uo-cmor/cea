@@ -12,7 +12,7 @@ fit_mcglm <- with_sink(
 
 fit_lp <- estimate(
   linear_pred = c(QALYs = QALYs ~ booster + age + sex, Costs = Cost ~ booster + age + sex),
-  link = c("identity", "log"), variance = c("constant", "tweedie"),
+  treatment = "booster", link = c("identity", "log"), variance = c("constant", "tweedie"),
   data = moa2
 )
 

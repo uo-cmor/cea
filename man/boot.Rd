@@ -7,6 +7,7 @@
 boot(
   x,
   R,
+  estimand = "ATE",
   sim = "ordinary",
   weights = NULL,
   simple = FALSE,
@@ -20,6 +21,10 @@ boot(
 the default 'formula' specification.}
 
 \item{R}{The number of bootstrap replicates.}
+
+\item{estimand}{String scalar. Whether to calculate the average treatment
+effect (ATE), average treatment effect on the treated (ATT), or average
+treatment effect on the controls (ATC). Only used for non-linear models.}
 
 \item{sim}{A character vector indicating the type of simulation required.
 Possible values are "ordinary" (the default), "parametric", "balanced",

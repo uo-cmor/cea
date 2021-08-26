@@ -60,7 +60,8 @@ an object of class \code{cea_estimate} inheriting from \code{mcglm}.
 \description{
 Estimate a multivariate covariance generalised linear model (\cite{Bonat &
 Jørgensen 2016}) for the joint incremental costs and QALYs from a
-randomised trial (or other comparable data source).
+randomised trial (or other comparable data source). Models are estimated
+using the \code{mcglm} package (\cite{Bonat 2018}).
 }
 \details{
 The standard model specification provides \code{QALYs}, \code{costs}, \code{treatment}, and
@@ -93,4 +94,8 @@ Costs, or a linear regression model for all responses for a custom
 Bonat WH, Jørgensen B. \emph{Multivariate covariance generalized linear
 models}. J Royal Stat Soc 2016;65:649-75.
 \url{https://doi.org/10.1111/rssc.12145}
+
+Bonat WH. \emph{Multiple response variables regression models in R: The
+mcglm package}. J Stat Soft 2018;84(4):1-30.
+\url{https://doi.org/10.18637/jss.v084.i04}
 }

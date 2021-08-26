@@ -5,6 +5,9 @@
 #'      regression model.
 #' @param x `cea_estimate` or `cea_boot` object. The fitted CEA regression
 #'     model or bootstrap resampling from the fitted model.
+#' @param estimand String scalar. Whether to calculate the average treatment
+#'     effect (ATE), average treatment effect on the treated (ATT), or average
+#'     treatment effect on the controls (ATC). Only used for non-linear models.
 #' @param outcomes A character vector indicating the outcomes to be calculated.
 #'     Possible values are "QALYs", "Costs", "INMB", or "INHB".
 #' @param conf Confidence level of the required intervals.
@@ -20,14 +23,14 @@
 #' @param ... Passed to \code{\link{boot}}.
 #'
 #' @export
-ci <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, ...) {
+ci <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE", ...) {
   UseMethod("ci")
 }
 
 #' @rdname ci
 #' @export
-ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, method = "boot", R,
-                            sim = "ordinary", ...) {
+ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE",
+                            method = "boot", R, sim = "ordinary", ...) {
   if (!identical(method, "boot")) stop_unknown_method(method)
   if (!all(outcomes %in% c("QALYs", "Costs", "INMB", "INHB")))
     stop_unknown_outcome(outcomes[which.max(!(outcomes %in% c("QALYs", "Costs", "INMB", "INHB")))])
@@ -37,7 +40,7 @@ ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp,
   if (type == "bca" & R < nrow(x$data)) stop_R_too_small(R, nrow(x$data))
   if (type == "bca" & sim == "parametric") stop_invalid_bca_parametric()
 
-  boot_est <- boot(x, R = R, sim = sim, ...)
+  boot_est <- boot(x, R = R, estimand = estimand, sim = sim, ...)
 
   out <- list()
   for (i in outcomes) {

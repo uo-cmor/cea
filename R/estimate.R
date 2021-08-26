@@ -2,7 +2,8 @@
 #'
 #' Estimate a multivariate covariance generalised linear model (\cite{Bonat &
 #'     Jørgensen 2016}) for the joint incremental costs and QALYs from a
-#'     randomised trial (or other comparable data source).
+#'     randomised trial (or other comparable data source). Models are estimated
+#'     using the \code{mcglm} package (\cite{Bonat 2018}).
 #'
 #' The standard model specification provides `QALYs`, `costs`, `treatment`, and
 #'     (optional) `covars`, to estimate a bivariate regression with common RHS
@@ -34,6 +35,10 @@
 #' Bonat WH, Jørgensen B. \emph{Multivariate covariance generalized linear
 #'     models}. J Royal Stat Soc 2016;65:649-75.
 #'     \url{https://doi.org/10.1111/rssc.12145}
+#'
+#' Bonat WH. \emph{Multiple response variables regression models in R: The
+#'     mcglm package}. J Stat Soft 2018;84(4):1-30.
+#'     \url{https://doi.org/10.18637/jss.v084.i04}
 #'
 #' @param QALYs,costs,treatment Character strings naming the variables in
 #'     `data` representing QALYs, costs, and treatment assignment,
@@ -97,11 +102,9 @@ estimate <- function(QALYs, costs, treatment, covars, data,
     form_costs <- stats::reformulate(c(treatment, covars), costs)
 
     linear_pred <- list(QALYs = form_QALYs, Costs = form_costs)
-    spec <- "formula"
   } else {
-    if (!missing(QALYs) || !missing(costs) || !missing(treatment) || !missing(covars))
+    if (!missing(QALYs) || !missing(costs) || !missing(covars))
       warn_formula_override()
-    spec <- "linear_pred"
   }
   n_outcome <- length(linear_pred)
 
@@ -115,10 +118,9 @@ estimate <- function(QALYs, costs, treatment, covars, data,
                  variance = variance, data = data, ...)
   )
 
-  if (spec == "formula") {
-    class(out) <- c("cea_estimate", class(out))
-    attr(out, "call") <- cl
-  }
+  class(out) <- c("cea_estimate", class(out))
+  attr(out, "call") <- cl
+  attr(out, "tx") <- treatment
   out
 }
 
@@ -128,16 +130,19 @@ print.cea_estimate <- function(x, ...) {
   cat("=== Cost-Effectiveness Regression Estimates ===\n")
   cat("===============================================\n\n")
 
-  cat("QALYs model:", rlang::as_label(x$linear_pred[[1]]), "\n")
-  cat("             * Link function:", x$link[[1]], "\n")
-  cat("             * Variance function:", x$variance[[1]], "\n")
-  cat("             * Covariance function:", x$covariance[[1]], "\n\n")
-  cat("Costs model:", rlang::as_label(x$linear_pred[[2]]), "\n")
-  cat("             * Link function:", x$link[[2]], "\n")
-  cat("             * Variance function:", x$variance[[2]], "\n")
-  cat("             * Covariance function:", x$covariance[[2]], "\n\n")
-
   cat("Call:", rlang::quo_text(attr(x, "call")), "\n\n")
+
+  cat("------------------\n")
+
+  cat("Univariate Models:\n\n")
+  for (i in seq_along(x$linear_pred)) {
+    cat("  ", names(x$linear_pred)[[i]], ": ", rlang::as_label(x$linear_pred[[i]]), "\n", sep = "")
+    cat("    * Link function:", x$link[[i]], "\n")
+    cat("    * Variance function:", x$variance[[i]], "\n")
+    cat("    * Covariance function:", x$covariance[[i]], "\n\n")
+  }
+
+  cat("------------------\n")
 
   cat("Incremental Treatment Effects:\n")
   cat("  QALYs:", sprintf("%+1.3f", QALYs(x)), "\n")
