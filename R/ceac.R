@@ -4,6 +4,10 @@
 #'      regression model.
 #' @param x `cea_estimate` object. The fitted CEA regression model. Must use
 #'     the default 'formula' specification.
+#' @param wtp_max Maximum willingness-to-pay level for calculation.
+#' @param wtp_step Interval between calculated willingness-to-pay levels.
+#' @param QALYs,Costs Names of the variables in `x` representing QALYs and
+#'     Costs, respectively.
 #' @param estimand String scalar. Whether to calculate the average treatment
 #'     effect (ATE), average treatment effect on the treated (ATT), or average
 #'     treatment effect on the controls (ATC). Only used for non-linear models.
@@ -13,28 +17,56 @@
 #' @param sim A character vector indicating the type of simulation required.
 #'     Possible values are "ordinary" (the default), "parametric", "balanced",
 #'     or "permutation".
-#' @param wtp_max Maximum willingness-to-pay level for calculation.
-#' @param wtp_step Interval between calculated willingness-to-pay levels.
 #' @param ... Passed to \code{\link{boot}}.
 #'
 #' @export
-ceac <- function(x, estimand = "ATE", method = "boot", R, sim = "ordinary",
-                 wtp_max, wtp_step, ...) {
-  if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
+ceac <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs", ...) {
+  UseMethod("ceac")
+}
+
+#' @rdname ceac
+#' @export
+ceac.cea_estimate <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs",
+                              estimand = "ATE", method = "boot", R, sim = "ordinary", ...) {
   if (!identical(method, "boot")) stop_unknown_method(method)
   if (method == "boot" && missing(R)) stop_missing_R()
+  if (!all(c(QALYs, Costs) %in% names(x$linear_pred)))
+    stop_unknown_outcome(c(QALYs, Costs)[which.max(!(c(QALYs, Costs) %in% names(x$linear_pred)))])
 
   wtp <- seq.int(0, wtp_max, wtp_step)
   boot_est <- boot(x, R = R, estimand = estimand, sim = sim, ...)
 
+  idxs <- c(which(names(boot_est$t0) == QALYs), which(names(boot_est$t0) == Costs))
+
   out <- tibble::tibble(
     wtp = wtp,
-    ceac = colMeans((boot_est$t %*% rbind(wtp, -1)) > 0)
+    ceac = colMeans((boot_est$t[, idxs] %*% rbind(wtp, -1)) > 0)
   )
 
   class(out) <- c("cea_ceac", class(out))
   if (method == "boot") attr(out, "R") <- R
   if (method == "boot") attr(out, "sim") <- sim
+
+  out
+}
+
+#' @rdname ceac
+#' @export
+ceac.cea_boot <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs", ...) {
+  if (!all(c(QALYs, Costs) %in% names(x$t0)))
+    stop_unknown_outcome(c(QALYs, Costs)[which.max(!(c(QALYs, Costs) %in% names(x$t0)))])
+
+  wtp <- seq.int(0, wtp_max, wtp_step)
+  idxs <- c(which(names(x$t0) == QALYs), which(names(x$t0) == Costs))
+
+  out <- tibble::tibble(
+    wtp = wtp,
+    ceac = colMeans((x$t[, idxs] %*% rbind(wtp, -1)) > 0)
+  )
+
+  class(out) <- c("cea_ceac", class(out))
+  attr(out, "R") <- x$R
+  attr(out, "sim") <- x$sim
 
   out
 }

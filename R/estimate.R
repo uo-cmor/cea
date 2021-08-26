@@ -50,9 +50,9 @@
 #'     variables in the model.
 #' @param linear_pred (optional) A list of formula specifying the different
 #'     model components to be estimated. If specified, over-rides the model
-#'     specification in `QALYs`, `costs`, `treatment` and optional `covars`.
-#'     See \code{\link[mcglm]{mcglm}} for details (if provided, this argument
-#'     is passed to `mcglm` unchanged).
+#'     specification in `QALYs`, `costs`, and optional `covars`. See
+#'     \code{\link[mcglm]{mcglm}} for details (if provided, this argument is
+#'     passed to `mcglm` unchanged).
 #' @param matrix_pred (optional) A list of matrices to be used on the matrix
 #'     linear predictor. See \code{\link[mcglm]{mcglm}} for details (if
 #'     provided, this argument is passed to `mcglm` unchanged). If not
@@ -105,6 +105,7 @@ estimate <- function(QALYs, costs, treatment, covars, data,
   } else {
     if (!missing(QALYs) || !missing(costs) || !missing(covars))
       warn_formula_override()
+    if (!rlang::is_string(treatment)) stop_not_string("treatment")
   }
   n_outcome <- length(linear_pred)
 

@@ -31,9 +31,9 @@ variables in the model.}
 
 \item{linear_pred}{(optional) A list of formula specifying the different
 model components to be estimated. If specified, over-rides the model
-specification in \code{QALYs}, \code{costs}, \code{treatment} and optional \code{covars}.
-See \code{\link[mcglm]{mcglm}} for details (if provided, this argument
-is passed to \code{mcglm} unchanged).}
+specification in \code{QALYs}, \code{costs}, and optional \code{covars}. See
+\code{\link[mcglm]{mcglm}} for details (if provided, this argument is
+passed to \code{mcglm} unchanged).}
 
 \item{matrix_pred}{(optional) A list of matrices to be used on the matrix
 linear predictor. See \code{\link[mcglm]{mcglm}} for details (if

@@ -2,22 +2,39 @@
 % Please edit documentation in R/ceac.R
 \name{ceac}
 \alias{ceac}
+\alias{ceac.cea_estimate}
+\alias{ceac.cea_boot}
 \title{Cost-Effectiveness Acceptability Curves}
 \usage{
-ceac(
+ceac(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs", ...)
+
+\method{ceac}{cea_estimate}(
   x,
+  wtp_max,
+  wtp_step,
+  QALYs = "QALYs",
+  Costs = "Costs",
   estimand = "ATE",
   method = "boot",
   R,
   sim = "ordinary",
-  wtp_max,
-  wtp_step,
   ...
 )
+
+\method{ceac}{cea_boot}(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs", ...)
 }
 \arguments{
 \item{x}{\code{cea_estimate} object. The fitted CEA regression model. Must use
 the default 'formula' specification.}
+
+\item{wtp_max}{Maximum willingness-to-pay level for calculation.}
+
+\item{wtp_step}{Interval between calculated willingness-to-pay levels.}
+
+\item{QALYs, Costs}{Names of the variables in \code{x} representing QALYs and
+Costs, respectively.}
+
+\item{...}{Passed to \code{\link{boot}}.}
 
 \item{estimand}{String scalar. Whether to calculate the average treatment
 effect (ATE), average treatment effect on the treated (ATT), or average
@@ -31,12 +48,6 @@ implemented.}
 \item{sim}{A character vector indicating the type of simulation required.
 Possible values are "ordinary" (the default), "parametric", "balanced",
 or "permutation".}
-
-\item{wtp_max}{Maximum willingness-to-pay level for calculation.}
-
-\item{wtp_step}{Interval between calculated willingness-to-pay levels.}
-
-\item{...}{Passed to \code{\link{boot}}.}
 }
 \description{
 Generate a cost-effectiveness acceptability curve (CEAC) from a fitted CEA

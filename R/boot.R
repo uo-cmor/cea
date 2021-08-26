@@ -24,17 +24,17 @@ boot <- function(x, R, estimand = "ATE", sim = "ordinary", weights = NULL,
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
   if (!(sim %in% c("ordinary", "parametric", "balanced", "permutation"))) stop_unknown_sim(sim)
   if (missing(parallel)) parallel <- getOption("cea.boot.parallel", "no")
+  outcomes <- names(x$linear_pred)
   if (sim == "parametric") {
     par_fun <- function(data) {
-      c(QALYs = QALYs(data, estimand), Costs = Costs(data, estimand))
+      vapply(outcomes, extract, numeric(1), x = data, estimand = estimand)
     }
     ran_fun <- function(data, mle) {
       out <- data
-      nvars <- length(out$Regression) / 2
-      idxs <- c(2, 2 + nvars)
+      nbeta <- Reduce(`+`, out$Information$n_betas)
       rand <- c(mvtnorm::rmvnorm(1, c(out$Regression, out$Covariance), as.matrix(out$vcov)))
-      out$Regression <- rand[1:(nvars * 2)]
-      out$Covariance <- rand[(nvars * 2 + 1):length(rand)]
+      out$Regression <- rand[1:nbeta]
+      out$Covariance <- rand[(nbeta + 1):length(rand)]
       out
     }
     out <- eval(rlang::expr(boot::boot(
@@ -46,7 +46,7 @@ boot <- function(x, R, estimand = "ATE", sim = "ordinary", weights = NULL,
       call. <- attr(x, "call")
       call.$data <- x$data[i, ]
       fit_boot <- eval(call.)
-      c(QALYs = QALYs(fit_boot, estimand), Costs = Costs(fit_boot, estimand))
+      vapply(outcomes, extract, numeric(1), x = fit_boot, estimand = estimand)
     }
     out <- eval(rlang::expr(boot::boot(
       seq_len(!!nrow(x$data)), est_fun, R = !!R, sim = !!sim, weights = !!weights,

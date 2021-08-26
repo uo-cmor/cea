@@ -32,8 +32,9 @@ ci <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "
 ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE",
                             method = "boot", R, sim = "ordinary", ...) {
   if (!identical(method, "boot")) stop_unknown_method(method)
-  if (!all(outcomes %in% c("QALYs", "Costs", "INMB", "INHB")))
-    stop_unknown_outcome(outcomes[which.max(!(outcomes %in% c("QALYs", "Costs", "INMB", "INHB")))])
+  if (!all(outcomes %in% c(names(x$linear_pred), "INMB", "INHB"))) stop_unknown_outcome(
+    outcomes[which.max(!(outcomes %in% c(names(x$linear_pred), "INMB", "INHB")))]
+  )
   if (any(c("INMB", "INHB") %in% outcomes) && missing(wtp)) stop_missing_wtp()
   if (method == "boot" && missing(R)) stop_missing_R()
   if (!(type %in% c("perc", "norm", "basic", "bca"))) stop_invalid_ci_type(type)
@@ -42,24 +43,8 @@ ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp,
 
   boot_est <- boot(x, R = R, estimand = estimand, sim = sim, ...)
 
-  out <- list()
-  for (i in outcomes) {
-    out[[i]] <- switch(
-      i,
-      QALYs = boot::boot.ci(boot_est, conf = conf, type = type, index = 1),
-      Costs = boot::boot.ci(boot_est, conf = conf, type = type, index = 2),
-      INMB = boot::boot.ci(boot_est, conf = conf, type = type,
-                           t0 = rlang::set_names(boot_est$t0[1] * wtp - boot_est$t0[2], "INMB"),
-                           t = boot_est$t[, 1] * wtp - boot_est$t[, 2]),
-      INHB = boot::boot.ci(boot_est, conf = conf, type = type,
-                           t0 = rlang::set_names(boot_est$t0[1] - boot_est$t0[2] / wtp, "INHB"),
-                           t = boot_est$t[, 1] - boot_est$t[, 2] / wtp)
-    )
-    out[[i]] <- out[[i]][[4]][1, ncol(out[[i]][[4]]) - (1:0)]
-  }
+  out <- calculate_boot_cis(boot_est, outcomes, conf, type, wtp)
 
-  out <- rlang::exec(rbind, !!!out)
-  colnames(out) <- c("Lower", "Upper")
   class(out) <- "cea_ci"
   attr(out, "conf") <- conf
   if (method == "boot") attr(out, "type") <- type
@@ -72,31 +57,16 @@ ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp,
 #' @rdname ci
 #' @export
 ci.cea_boot <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, ...) {
-  if (!all(outcomes %in% c("QALYs", "Costs", "INMB", "INHB")))
-    stop_unknown_outcome(outcomes[which.max(!(outcomes %in% c("QALYs", "Costs", "INMB", "INHB")))])
+  if (!all(outcomes %in% c(names(x$t0), "INMB", "INHB"))) stop_unknown_outcome(
+    outcomes[which.max(!(outcomes %in% c(names(x$t0), "INMB", "INHB")))]
+  )
   if (any(c("INMB", "INHB") %in% outcomes) && missing(wtp)) stop_missing_wtp()
   if (!(type %in% c("perc", "norm", "basic", "bca"))) stop_invalid_ci_type(type)
   if (type == "bca" & x$sim == "parametric") stop_invalid_bca_parametric()
   if (type == "bca" & x$R < length(x$data)) stop_R_too_small(x$R, length(x$data))
 
-  out <- list()
-  for (i in outcomes) {
-    out[[i]] <- switch(
-      i,
-      QALYs = boot::boot.ci(x, conf = conf, type = type, index = 1),
-      Costs = boot::boot.ci(x, conf = conf, type = type, index = 2),
-      INMB = boot::boot.ci(x, conf = conf, type = type,
-                           t0 = rlang::set_names(x$t0[1] * wtp - x$t0[2], "INMB"),
-                           t = x$t[, 1] * wtp - x$t[, 2]),
-      INHB = boot::boot.ci(x, conf = conf, type = type,
-                           t0 = rlang::set_names(x$t0[1] - x$t0[2] / wtp, "INHB"),
-                           t = x$t[, 1] - x$t[, 2] / wtp)
-    )
-    out[[i]] <- out[[i]][[4]][1, ncol(out[[i]][[4]]) - (1:0)]
-  }
+  out <- calculate_boot_cis(x, outcomes, conf, type, wtp)
 
-  out <- rlang::exec(rbind, !!!out)
-  colnames(out) <- c("Lower", "Upper")
   class(out) <- "cea_ci"
   attr(out, "conf") <- conf
   attr(out, "type") <- type
@@ -129,4 +99,30 @@ print.cea_ci <- function(x, ...) {
   print(unclass(x))
 
   invisible(y)
+}
+
+calculate_boot_cis <- function(x, outcomes, conf, type, wtp) {
+  out <- list()
+
+  if (any(c("INMB", "INHB", "QALYs") %in% outcomes)) idx.QALYs <- which(names(x$t0) == "QALYs")
+  if (any(c("INMB", "INHB", "Costs") %in% outcomes)) idx.Costs <- which(names(x$t0) == "Costs")
+
+  for (i in outcomes) {
+    out[[i]] <- switch(
+      i,
+      QALYs = boot::boot.ci(x, conf = conf, type = type, index = idx.QALYs),
+      Costs = boot::boot.ci(x, conf = conf, type = type, index = idx.Costs),
+      INMB = boot::boot.ci(x, conf = conf, type = type,
+                           t0 = rlang::set_names(x$t0["QALYs"] * wtp - x$t0["Costs"], "INMB"),
+                           t = x$t[, idx.QALYs] * wtp - x$t[, idx.Costs]),
+      INHB = boot::boot.ci(x, conf = conf, type = type,
+                           t0 = rlang::set_names(x$t0["QALYs"] - x$t0["Costs"] / wtp, "INHB"),
+                           t = x$t[, idx.QALYs] - x$t[, idx.Costs] / wtp),
+      boot::boot.ci(x, conf = conf, type = type, index = which(names(x$t0) == i))
+    )
+    out[[i]] <- out[[i]][[4]][1, ncol(out[[i]][[4]]) - (1:0)]
+  }
+  out <- rlang::exec(rbind, !!!out)
+  colnames(out) <- c("Lower", "Upper")
+  out
 }
