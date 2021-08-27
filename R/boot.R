@@ -22,7 +22,8 @@ boot <- function(x, R, estimand = "ATE", sim = "ordinary", weights = NULL,
                  simple = FALSE, parallel = c("no", "multicore", "snow"),
                  ncpus = getOption("cea.boot.ncpus", 1L), cl = NULL) {
   if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
-  if (!(sim %in% c("ordinary", "parametric", "balanced", "permutation"))) stop_unknown_sim(sim)
+  if (!rlang::is_string(sim, c("ordinary", "parametric", "balanced", "permutation")))
+    stop_unknown_sim(sim)
   if (missing(parallel)) parallel <- getOption("cea.boot.parallel", "no")
   outcomes <- names(x$linear_pred)
   if (sim == "parametric") {

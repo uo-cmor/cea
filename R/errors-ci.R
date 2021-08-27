@@ -1,11 +1,17 @@
 stop_unknown_method <- function(method) {
   x <- rlang::format_error_bullets(c(
     "Invalid `method` argument.",
-    i = "Only the 'boot' method is currently implemented.",
+    i = "'boot' and 'delta' methods are currently implemented.",
     x = paste0("You've supplied '", method, "'.")
   ))
 
   rlang::cnd_signal(rlang::error_cnd("cea_error_unknown_method", message = x))
+}
+
+stop_invalid_outcome <- function() {
+  x <- "Invalid `outcomes` argument."
+
+  rlang::cnd_signal(rlang::error_cnd("cea_error_invalid_outcome", message = x))
 }
 
 stop_missing_wtp <- function() {

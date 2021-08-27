@@ -79,5 +79,5 @@ extract <- function(x, outcome, estimand = "ATE") {
   }
   linkinv <- stats::make.link(x$link[[idx]])$linkinv
 
-  mean(linkinv(X1 %*% coefs)) - mean(linkinv(X0 %*% coefs))
+  mean(linkinv(X1 %*% coefs) - linkinv(X0 %*% coefs))
 }

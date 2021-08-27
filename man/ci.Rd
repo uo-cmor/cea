@@ -43,8 +43,8 @@ treatment effect on the controls (ATC). Only used for non-linear models.}
 
 \item{...}{Passed to \code{\link{boot}}.}
 
-\item{method}{Which method to use. Currently only 'boot' (bootstrap) is
-implemented.}
+\item{method}{Which method to use. Available methods are 'boot' (bootstrap)
+and 'delta' (delta approximation) are implemented.}
 
 \item{R}{The number of bootstrap replicates.}
 
@@ -56,4 +56,12 @@ or "permutation".}
 Generate confidence intervals for mean incremental QALYs, costs, net
 monetary benefit (INMB), and net health benefit (INHB) from a fitted CEA
 regression model.
+}
+\details{
+The 'boot' method uses \code{boot} and \code{boot.ci} from the \code{boot} package. The
+'delta' method uses the delta approximation (\cite{Oehlert 1992}).
+}
+\references{
+Oehlert GW. \emph{A note on the delta method}. Am Stat 1992;46(1):27-9.
+\url{https://doi.org/10.2307/2684406}
 }

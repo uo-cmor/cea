@@ -1,5 +1,6 @@
 suppressWarnings({
   fit_ci <- ci(fit, c("QALYs", "Costs", "INMB"), conf = 0.8, type = "perc", R = 9, wtp = 60000)
+  fit_ci_delta <- ci(fit, c("QALYs", "Costs", "INMB"), conf = 0.8, wtp = 60000, method = "delta")
   fit_ci_boot <- ci(boot_est, c("QALYs", "Costs", "INMB"), conf = 0.8, type = "perc", wtp = 60000)
 })
 
@@ -8,8 +9,17 @@ test_that("ci works with cea_estimate objects", {
   expect_equal(dim(fit_ci), c(3, 2))
   expect_true(all(fit_ci[, 1] < fit_ci[, 2]))
   expect_equal(attr(fit_ci, "conf"), 0.8)
+  expect_equal(attr(fit_ci, "method"), "boot")
   expect_equal(attr(fit_ci, "type"), "perc")
   expect_equal(attr(fit_ci, "R"), 9)
+})
+
+test_that("ci works with delta method", {
+  expect_s3_class(fit_ci_delta, "cea_ci")
+  expect_equal(dim(fit_ci_delta), c(3, 2))
+  expect_true(all(fit_ci_delta[, 1] < fit_ci_delta[, 2]))
+  expect_equal(attr(fit_ci_delta, "conf"), 0.8)
+  expect_equal(attr(fit_ci_delta, "method"), "delta")
 })
 
 test_that("ci works with cea_boot objects", {
@@ -17,6 +27,7 @@ test_that("ci works with cea_boot objects", {
   expect_equal(dim(fit_ci_boot), c(3, 2))
   expect_true(all(fit_ci_boot[, 1] < fit_ci_boot[, 2]))
   expect_equal(attr(fit_ci_boot, "conf"), 0.8)
+  expect_equal(attr(fit_ci_boot, "method"), "boot")
   expect_equal(attr(fit_ci_boot, "type"), "perc")
   expect_equal(attr(fit_ci_boot, "R"), 9)
 })
@@ -24,6 +35,7 @@ test_that("ci works with cea_boot objects", {
 test_that("ci gives appropriate error messages", {
   expect_error(ci(fit_mcglm), "no applicable method")
   expect_error(ci(fit, method = "x"), class = "cea_error_unknown_method")
+  expect_error(ci(fit, 1), class = "cea_error_invalid_outcome")
   expect_error(ci(fit, outcomes = c("QALYs", "costs")), class = "cea_error_unknown_outcome")
   expect_error(ci(fit), class = "cea_error_missing_wtp")
   expect_error(ci(fit, wtp = 60000), class = "cea_error_missing_R")
@@ -45,8 +57,16 @@ test_that("print.cea_ci works", {
   ci_ex <- structure(
     matrix(c(-0.043, -23.4, -4689, 0.247, 4241, 13993), ncol = 2,
            dimnames = list(c("QALYs", "Costs", "INMB"), c("Lower", "Upper"))),
-    class = "cea_ci", conf = 0.8, type = "bca", R = 99
+    class = "cea_ci", conf = 0.8, method = "boot", type = "bca", R = 99
   )
   expect_snapshot_output(ci_ex)
+
+  ci_ex_delta <- structure(
+    matrix(c(-0.043, -23.4, -4689, 0.247, 4241, 13993), ncol = 2,
+           dimnames = list(c("QALYs", "Costs", "INMB"), c("Lower", "Upper"))),
+    class = "cea_ci", conf = 0.8, method = "delta"
+  )
+  expect_snapshot_output(ci_ex_delta)
+
   with_sink(tempfile(), expect_equal(print(ci_ex), ci_ex))
 })

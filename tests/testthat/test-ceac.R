@@ -23,6 +23,8 @@ test_that("ceac gives appropriate errors", {
   expect_error(ceac(fit_mcglm), "no applicable method")
   expect_error(ceac(fit, method = "x"), class = "cea_error_unknown_method")
   expect_error(ceac(fit), class = "cea_error_missing_R")
+  expect_error(ceac(fit, R = 9, QALYs = "X"), class = "cea_error_unknown_outcome")
+  expect_error(ceac(boot_est, QALYs = "X"), class = "cea_error_unknown_outcome")
 })
 
 test_that("autoplot.cea_ceac works as expected", {

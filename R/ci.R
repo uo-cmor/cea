@@ -3,6 +3,14 @@
 #' Generate confidence intervals for mean incremental QALYs, costs, net
 #'     monetary benefit (INMB), and net health benefit (INHB) from a fitted CEA
 #'      regression model.
+#'
+#' The 'boot' method uses `boot` and `boot.ci` from the `boot` package. The
+#'     'delta' method uses the delta approximation (\cite{Oehlert 1992}).
+#'
+#' @references
+#' Oehlert GW. \emph{A note on the delta method}. Am Stat 1992;46(1):27-9.
+#'     \url{https://doi.org/10.2307/2684406}
+#'
 #' @param x `cea_estimate` or `cea_boot` object. The fitted CEA regression
 #'     model or bootstrap resampling from the fitted model.
 #' @param estimand String scalar. Whether to calculate the average treatment
@@ -14,8 +22,8 @@
 #' @param type Which type of intervals are required. Possible values are
 #'     "norm", "basic", "perc", or "bca".
 #' @param wtp Willingness-to-pay level for calculation of INMB & INHB.
-#' @param method Which method to use. Currently only 'boot' (bootstrap) is
-#'     implemented.
+#' @param method Which method to use. Available methods are 'boot' (bootstrap)
+#'     and 'delta' (delta approximation) are implemented.
 #' @param R The number of bootstrap replicates.
 #' @param sim A character vector indicating the type of simulation required.
 #'     Possible values are "ordinary" (the default), "parametric", "balanced",
@@ -31,22 +39,30 @@ ci <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "
 #' @export
 ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE",
                             method = "boot", R, sim = "ordinary", ...) {
-  if (!identical(method, "boot")) stop_unknown_method(method)
+  if (!rlang::is_string(method, c("boot", "delta"))) stop_unknown_method(method)
+  if (!rlang::is_character(outcomes)) stop_invalid_outcome()
   if (!all(outcomes %in% c(names(x$linear_pred), "INMB", "INHB"))) stop_unknown_outcome(
     outcomes[which.max(!(outcomes %in% c(names(x$linear_pred), "INMB", "INHB")))]
   )
   if (any(c("INMB", "INHB") %in% outcomes) && missing(wtp)) stop_missing_wtp()
-  if (method == "boot" && missing(R)) stop_missing_R()
-  if (!(type %in% c("perc", "norm", "basic", "bca"))) stop_invalid_ci_type(type)
-  if (type == "bca" & R < nrow(x$data)) stop_R_too_small(R, nrow(x$data))
-  if (type == "bca" & sim == "parametric") stop_invalid_bca_parametric()
 
-  boot_est <- boot(x, R = R, estimand = estimand, sim = sim, ...)
+  if (method == "delta") {
+    out <- calculate_delta_cis(x, outcomes, conf, wtp, estimand)
+  } else {
+    if (method == "boot" && missing(R)) stop_missing_R()
+    if (method == "boot" && !rlang::is_string(type, c("perc", "norm", "basic", "bca")))
+      stop_invalid_ci_type(type)
+    if (method == "boot" && type == "bca" && R < nrow(x$data)) stop_R_too_small(R, nrow(x$data))
+    if (method == "boot" && type == "bca" && sim == "parametric") stop_invalid_bca_parametric()
 
-  out <- calculate_boot_cis(boot_est, outcomes, conf, type, wtp)
+    boot_est <- boot(x, R = R, estimand = estimand, sim = sim, ...)
+
+    out <- calculate_boot_cis(boot_est, outcomes, conf, type, wtp)
+  }
 
   class(out) <- "cea_ci"
   attr(out, "conf") <- conf
+  attr(out, "method") <- method
   if (method == "boot") attr(out, "type") <- type
   if (method == "boot") attr(out, "R") <- R
   if (method == "boot") attr(out, "sim") <- sim
@@ -69,6 +85,7 @@ ci.cea_boot <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, ...
 
   class(out) <- "cea_ci"
   attr(out, "conf") <- conf
+  attr(out, "method") <- "boot"
   attr(out, "type") <- type
   attr(out, "R") <- x$R
   attr(out, "sim") <- x$sim
@@ -84,18 +101,27 @@ print.cea_ci <- function(x, ...) {
 
   conf <- attr(x, "conf") * 100
   attr(x, "conf") <- NULL
-  type <- switch(attr(x, "type"),
-                 perc = "bootstrap percentile", norm = "normal approximation",
-                 basic = "basic bootstrap", bca = "adjusted bootstrap percentile (BCa)")
-  attr(x, "type") <- NULL
-  R <- attr(x, "R")
-  attr(x, "R") <- NULL
-  sim <- attr(x, "sim")
-  attr(x, "sim") <- NULL
+  method <- attr(x, "method")
+  attr(x, "method") <- NULL
+  if (method == "boot") {
+    type <- switch(attr(x, "type"),
+                   perc = "bootstrap percentile", norm = "normal approximation",
+                   basic = "basic bootstrap", bca = "adjusted bootstrap percentile (BCa)")
+    attr(x, "type") <- NULL
+    R <- attr(x, "R")
+    attr(x, "R") <- NULL
+    sim <- attr(x, "sim")
+    attr(x, "sim") <- NULL
+  }
 
   cat(conf, "% CONFIDENCE INTERVALS:\n", sep = "")
-  cat("Based on", R, sim, "bootstrap replicates\n")
-  cat("Intervals calculated using", type, "method\n\n")
+  if (method == "boot") {
+    cat("Based on", R, sim, "bootstrap replicates\n")
+    cat("Intervals calculated using", type, "method")
+  } else if (method == "delta") {
+    cat("Based on delta approximation")
+  }
+  cat("\n\n")
   print(unclass(x))
 
   invisible(y)
@@ -121,6 +147,29 @@ calculate_boot_cis <- function(x, outcomes, conf, type, wtp) {
       boot::boot.ci(x, conf = conf, type = type, index = which(names(x$t0) == i))
     )
     out[[i]] <- out[[i]][[4]][1, ncol(out[[i]][[4]]) - (1:0)]
+  }
+  out <- rlang::exec(rbind, !!!out)
+  colnames(out) <- c("Lower", "Upper")
+  out
+}
+
+calculate_delta_cis <- function(x, outcomes, conf, wtp, estimand) {
+  V <- extract_var(x)
+  out <- list()
+
+  if (any(c("INMB", "INHB", "QALYs") %in% outcomes)) dmu.QALYs <- extract_dmu(x, "QALYs", estimand)
+  if (any(c("INMB", "INHB", "Costs") %in% outcomes)) dmu.Costs <- extract_dmu(x, "Costs", estimand)
+
+  for (i in outcomes) {
+    out[[i]] <- switch(
+      i,
+      QALYs = c(QALYs(x, estimand), delta_se(dmu.QALYs, V)),
+      Costs = c(Costs(x, estimand), delta_se(dmu.Costs, V)),
+      INMB = c(INMB(x, wtp, estimand), delta_se(dmu.QALYs * wtp - dmu.Costs, V)),
+      INHB = c(INHB(x, wtp, estimand), delta_se(dmu.QALYs - dmu.Costs / wtp, V)),
+      c(extract(x, i, estimand), delta_se(extract_dmu(x, i, estimand), V))
+    )
+    out[[i]] <- out[[i]][[1]] + c(-1, 1) * stats::qnorm(1 - (1 - conf) / 2) * out[[i]][[2]]
   }
   out <- rlang::exec(rbind, !!!out)
   colnames(out) <- c("Lower", "Upper")

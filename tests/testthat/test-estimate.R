@@ -26,6 +26,11 @@ test_that("estimate gives appropriate messages", {
     estimate("QALYs", "Cost", "tx", linear_pred = list(Cost ~ booster + age + sex), data = moa2),
     class = "cea_warning_formula_override"
   )
+  suppressWarnings(expect_error(
+    estimate("QALYs", "Cost", 1, linear_pred = list(Cost ~ booster + age + sex),
+             c("age", "sex"), data = moa2),
+    class = "cea_error_not_string"
+  ))
 })
 
 test_that("estimate works with custom `linear_pred`", {
