@@ -28,22 +28,37 @@ ceac <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs", ...) {
 #' @export
 ceac.cea_estimate <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs",
                               estimand = "ATE", method = "boot", R, sim = "ordinary", ...) {
-  if (!identical(method, "boot")) stop_unknown_method(method)
+  if (!rlang::is_string(method, c("boot", "delta"))) stop_unknown_method(method)
   if (method == "boot" && missing(R)) stop_missing_R()
   if (!all(c(QALYs, Costs) %in% names(x$linear_pred)))
     stop_unknown_outcome(c(QALYs, Costs)[which.max(!(c(QALYs, Costs) %in% names(x$linear_pred)))])
 
   wtp <- seq.int(0, wtp_max, wtp_step)
-  boot_est <- boot(x, R = R, estimand = estimand, sim = sim, ...)
 
-  idxs <- c(which(names(boot_est$t0) == QALYs), which(names(boot_est$t0) == Costs))
+  if (method == "delta") {
+    V <- extract_var(x)
+    dmu.QALYs <- extract_dmu(x, QALYs, estimand)
+    dmu.Costs <- extract_dmu(x, Costs, estimand)
+    ceac <- vapply(
+      wtp,
+      function(a) stats::pnorm(0, INMB(x, a, estimand), delta_se(dmu.QALYs * a - dmu.Costs, V),
+                               lower.tail = FALSE),
+      numeric(1)
+    )
+    out <- tibble::tibble(wtp = wtp, ceac = ceac)
+  } else if (method == "boot") {
+    boot_est <- boot(x, R = R, estimand = estimand, sim = sim, ...)
 
-  out <- tibble::tibble(
-    wtp = wtp,
-    ceac = colMeans((boot_est$t[, idxs] %*% rbind(wtp, -1)) > 0)
-  )
+    idxs <- c(which(names(boot_est$t0) == QALYs), which(names(boot_est$t0) == Costs))
+
+    out <- tibble::tibble(
+      wtp = wtp,
+      ceac = colMeans((boot_est$t[, idxs] %*% rbind(wtp, -1)) > 0)
+    )
+  }
 
   class(out) <- c("cea_ceac", class(out))
+  attr(out, "method") <- method
   if (method == "boot") attr(out, "R") <- R
   if (method == "boot") attr(out, "sim") <- sim
 
@@ -65,6 +80,7 @@ ceac.cea_boot <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs"
   )
 
   class(out) <- c("cea_ceac", class(out))
+  attr(out, "method") <- "boot"
   attr(out, "R") <- x$R
   attr(out, "sim") <- x$sim
 
@@ -72,15 +88,18 @@ ceac.cea_boot <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs"
 }
 
 #' @importFrom ggplot2 autoplot
-#'
 #' @export
-autoplot.cea_ceac <- function(object, ...) {
-  ggplot2::ggplot(object, ggplot2::aes(.data$wtp, .data$ceac)) +
+autoplot.cea_ceac <- function(object, wtp = NULL, ...) {
+  out <- ggplot2::ggplot(object, ggplot2::aes(.data$wtp, .data$ceac))
+  if (!is.null(wtp)) out <- out + ggplot2::geom_vline(xintercept = wtp, colour = "red", alpha = 0.5)
+  out <- out +
     ggplot2::geom_line() +
     ggplot2::xlab("Willingness-to-pay threshold") + ggplot2::ylab("CEAC") +
     ggplot2::scale_y_continuous(labels = scales::label_percent(accuracy = 1),
                                 limits = c(0, 1)) +
     ggplot2::scale_x_continuous(labels = scales::label_dollar())
+
+  out
 }
 
 #' @export
