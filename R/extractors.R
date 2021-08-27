@@ -50,34 +50,47 @@ extract <- function(x, outcome, estimand = "ATE") {
   if (length(idx <- which(names(x$linear_pred) == outcome)) == 0) stop_unknown_outcome(outcome)
   tx <- attr(x, "tx")
   if (is.null(x$data[[tx]])) stop_unknown_treatment(tx)
-  if (is.factor(x$data[[tx]])) tx <- paste0(tx, levels(x$data[[tx]])[[2]])
-  idx_tx <- which(x$beta_names[[idx]] == tx)
+  if (is.factor(x$data[[tx]])) tx <- paste0(tx, levels(x$data[[tx]])[-1])
+  idx_tx <- which(x$beta_names[[idx]] %in% tx)
 
   if (x$link[[idx]] == "identity") {
     idx_reg <- Reduce(`+`, x$Information$n_betas[seq_len(idx - 1)], 0) + idx_tx
-    return(x$Regression[[idx_reg]])
+    out <- x$Regression[idx_reg]
+    names(out) <- extract_tx(x)
+    return(out)
   }
 
   idx_coef <-
     Reduce(`+`, x$Information$n_betas[seq_len(idx - 1)], 0) + seq_len(x$Information$n_betas[[idx]])
   coefs <- x$Regression[idx_coef]
 
-  X0 <- X1 <- x$list_X[[idx]]
-  X0[, idx_tx] <- 0
-  X1[, idx_tx] <- 1
-  if (estimand != "ATE") {
-    tx_values <- x$list_X[[idx]][, tx]
-    if (estimand == "ATT") {
-      X0 <- X0[tx_values == 1, ]
-      X1 <- X1[tx_values == 1, ]
-    } else if (estimand == "ATC") {
-      X0 <- X0[tx_values == 0, ]
-      X1 <- X1[tx_values == 0, ]
-    } else {
-      stop_unknown_estimand(estimand)
+  extract_effect <- function(i) {
+    X0 <- X1 <- x$list_X[[idx]]
+    X0[, i] <- 0
+    X1[, i] <- 1
+    if (estimand != "ATE") {
+      tx_values <- x$list_X[[idx]][, i]
+      if (estimand == "ATT") {
+        X0 <- X0[tx_values == 1, ]
+        X1 <- X1[tx_values == 1, ]
+      } else if (estimand == "ATC") {
+        X0 <- X0[tx_values == 0, ]
+        X1 <- X1[tx_values == 0, ]
+      } else {
+        stop_unknown_estimand(estimand)
+      }
     }
-  }
-  linkinv <- stats::make.link(x$link[[idx]])$linkinv
+    linkinv <- stats::make.link(x$link[[idx]])$linkinv
 
-  mean(linkinv(X1 %*% coefs) - linkinv(X0 %*% coefs))
+    mean(linkinv(X1 %*% coefs) - linkinv(X0 %*% coefs))
+  }
+
+  out <- vapply(idx_tx, extract_effect, numeric(1))
+  names(out) <- extract_tx(x)
+  out
+}
+
+extract_tx <- function(x) {
+  tx_vars <- x$beta_names[[1]][grepl(attr(x, "tx"), x$beta_names[[1]])]
+  sub(attr(x, "tx"), "", tx_vars)
 }

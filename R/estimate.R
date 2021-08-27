@@ -144,13 +144,25 @@ print.cea_estimate <- function(x, ...) {
   }
 
   cat("------------------\n")
-
   cat("Incremental Treatment Effects:\n")
-  cat("  QALYs:", sprintf("%+1.3f", QALYs(x)), "\n")
-  cat("  Costs:", sprintf("%+1.0f", Costs(x)), "\n")
-  cat("  ICER:", sprintf("%1.0f", ICER(x)), "\n\n")
+  if (is_factor_tx(x)) {
+    cat("        ", pad(extract_tx(x), 10), "\n")
+  }
+  cat("  QALYs:", sprintf("%+10.3f", QALYs(x)), "\n")
+  cat("  Costs:", sprintf("%+10.0f", Costs(x)), "\n")
+  cat("  ICER: ", sprintf("%10.0f", ICER(x)), "\n\n")
 
   cat("===============================================\n")
 
   return(invisible(x))
+}
+
+is_factor_tx <- function(x) UseMethod("is_factor_tx")
+is_factor_tx.cea_estimate <- function(x) is.factor(x$data[[attr(x, "tx")]])
+is_factor_tx.cea_boot <- function(x) !is.null(nrow(x$t0))
+
+pad <- function(x, width, cont = "~") {
+  cont <- ifelse(nchar(x, "width") >= width, cont, "")
+  x <- strtrim(x, width - 1 - nchar(cont))
+  paste0(strrep(" ", width - nchar(x, "width") - nchar(cont, "width")), x, cont)
 }

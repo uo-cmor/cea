@@ -1,19 +1,28 @@
 test_that("extract_dmu works as expected", {
   expect_equal(
     extract_dmu(fit, "Costs"),
-    matrix(c(0, 0, 0, 0, c(2022.699, 4685.837, 134611.481, 1087.425, 0, 0, 0)),
-           nrow = 1)
+    setNames(
+      list(matrix(c(0, 0, 0, 0, 2088.402, 4728.016, 137860.09, 1069.510, 0, 0, 0), nrow = 1)),
+      ""
+    ),
+    tolerance = 1e-7
   )
-  expect_equal(extract_dmu(fit, "QALYs"), matrix(c(0, 1, rep(0, 9)), nrow = 1))
+  expect_equal(extract_dmu(fit, "QALYs"), setNames(list(matrix(c(0, 1, rep(0, 9)), nrow = 1)), ""))
   expect_equal(
     extract_dmu(fit, "Costs", "ATT"),
-    matrix(c(0, 0, 0, 0, c(2024.003, 4688.859, 135601.075, 1198.564, 0, 0, 0)),
-           nrow = 1)
+    setNames(list(matrix(c(0, 0, 0, 0, 2071.148, 4688.953, 137076.73, 1239.201, 0, 0, 0), nrow = 1)), ""),
+    tolerance = 1e-7
   )
   expect_equal(
     extract_dmu(fit, "Costs", "ATC"),
-    matrix(c(0, 0, 0, 0, c(2021.395, 4682.815, 133621.888, 976.286, 0, 0, 0)),
-           nrow = 1)
+    setNames(list(matrix(c(0, 0, 0, 0, 2105.656, 4767.078, 138643.45, 899.8192, 0, 0, 0), nrow = 1)), ""),
+    tolerance = 1e-7
+  )
+  expect_equal(
+    extract_dmu(fit_fct, "QALYs"),
+    list(ExB = matrix(c(0, 1, rep(0, 13)), nrow = 1),
+         MT = matrix(c(0, 0, 1, rep(0, 12)), nrow = 1),
+         "MT + ExB" = matrix(c(0, 0, 0, 1, rep(0, 11)), nrow = 1))
   )
 })
 

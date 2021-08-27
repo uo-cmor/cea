@@ -28,7 +28,7 @@ boot <- function(x, R, estimand = "ATE", sim = "ordinary", weights = NULL,
   outcomes <- names(x$linear_pred)
   if (sim == "parametric") {
     par_fun <- function(data) {
-      vapply(outcomes, extract, numeric(1), x = data, estimand = estimand)
+      sapply(outcomes, extract, x = data, estimand = estimand)
     }
     ran_fun <- function(data, mle) {
       out <- data
@@ -47,7 +47,7 @@ boot <- function(x, R, estimand = "ATE", sim = "ordinary", weights = NULL,
       call. <- attr(x, "call")
       call.$data <- x$data[i, ]
       fit_boot <- eval(call.)
-      vapply(outcomes, extract, numeric(1), x = fit_boot, estimand = estimand)
+      sapply(outcomes, extract, x = fit_boot, estimand = estimand)
     }
     out <- eval(rlang::expr(boot::boot(
       seq_len(!!nrow(x$data)), est_fun, R = !!R, sim = !!sim, weights = !!weights,
@@ -56,24 +56,45 @@ boot <- function(x, R, estimand = "ATE", sim = "ordinary", weights = NULL,
   }
 
   class(out) <- c("cea_boot", class(out))
+  attr(out, "tx") <- extract_tx(x)
   out
 }
 
 #' @export
 autoplot.cea_boot <- function(object, wtp = NULL, QALYs = "QALYs", Costs = "Costs", ...) {
-  if (!all(c(QALYs, Costs) %in% names(object$t0)))
-    stop_unknown_outcome(c(QALYs, Costs)[which.max(!(c(QALYs, Costs) %in% names(object$t0)))])
+  mult_tx <- is.matrix(object$t0)
+  nm <- if (mult_tx) colnames(object$t0) else names(object$t0)
+  if (!all(c(QALYs, Costs) %in% nm))
+    stop_unknown_outcome(c(QALYs, Costs)[which.max(!(c(QALYs, Costs) %in% nm))])
 
-  plotdata <- tibble::as_tibble(object$t, .name_repair = ~names(object$t0))
+  if (mult_tx) dim(object$t) <- c(object$R * nrow(object$t0), ncol(object$t0))
+  plotdata <- tibble::as_tibble(object$t, .name_repair = ~nm)
+  if (mult_tx) plotdata$.tx <- factor(rep(seq_len(nrow(object$t0)), object$R))
 
-  out <- ggplot2::ggplot(plotdata, ggplot2::aes(.data[[QALYs]], .data[[Costs]])) +
-    ggplot2::geom_hline(yintercept = 0) + ggplot2::geom_vline(xintercept = 0)
-  if (!is.null(wtp)) out <- out + ggplot2::geom_abline(slope = wtp, colour = "red", alpha = 0.5)
+
+  out <- if (mult_tx) {
+    ggplot2::ggplot(plotdata, ggplot2::aes(.data[[QALYs]], .data[[Costs]],
+                                           colour = .data$.tx, shape = .data$.tx))
+  } else ggplot2::ggplot(plotdata, ggplot2::aes(.data[[QALYs]], .data[[Costs]]))
+
   out <- out +
-    ggplot2::geom_point() +
-    ggplot2::geom_point(ggplot2::aes(object$t0[[!!QALYs]], object$t0[[!!Costs]]), size = 3, colour = "red") +
+    ggplot2::geom_hline(yintercept = 0) + ggplot2::geom_vline(xintercept = 0)
+
+  if (!is.null(wtp)) out <- out + ggplot2::geom_abline(slope = wtp, colour = "red", alpha = 0.5)
+
+  out <- out + ggplot2::geom_point()
+
+  if (!mult_tx) out <- out +
+    ggplot2::geom_point(ggplot2::aes(object$t0[[!!QALYs]], object$t0[[!!Costs]]),
+                        size = 3, colour = "red")
+  out <- out +
     ggplot2::xlab("Incremental QALYs") + ggplot2::ylab("Incremental Costs") +
     ggplot2::scale_y_continuous(labels = scales::label_dollar())
+
+  if (mult_tx)
+    out <- out +
+    ggplot2::scale_color_brewer("Treatment group", type = "qual", palette = 2) +
+    ggplot2::scale_shape_discrete("Treatment group")
 
   out
 }

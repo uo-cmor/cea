@@ -1,5 +1,7 @@
 t0 <- c(QALYs = QALYs(fit), Costs = Costs(fit))
 
+t0_fct <- cbind(QALYs = QALYs(fit_fct), Costs = Costs(fit_fct))
+
 test_that("boot works as expected", {
   expect_s3_class(boot_est, "cea_boot")
   expect_equal(boot_est$t0, t0)
@@ -17,6 +19,13 @@ test_that("parametric boot works as expected", {
   expect_equal(boot_est_par$sim, "parametric")
 })
 
+test_that("boot works with factor treatment variable", {
+  expect_s3_class(boot_est_fct, "cea_boot")
+  expect_equal(boot_est_fct$t0, t0_fct)
+  expect_equal(dim(boot_est_fct$t), c(9, 6))
+  expect_equal(boot_est_fct$R, 9)
+  expect_equal(boot_est_fct$sim, "parametric")
+})
 
 test_that("boot gives appropriate error messages", {
   expect_error(boot(fit_mcglm, R = 9), class = "cea_error_not_cea_estimate")
@@ -38,6 +47,7 @@ test_that("autoplot.cea_boot works as expected", {
     list(y = "Incremental Costs", x = "Incremental QALYs", yintercept = "yintercept",
          xintercept = "xintercept")
   )
+
   plt <- autoplot(boot_est, wtp = 60000)
   expect_s3_class(plt, "gg")
   expect_length(plt$layers, 5)
@@ -47,10 +57,22 @@ test_that("autoplot.cea_boot works as expected", {
   expect_s3_class(plt$layers[[4]]$geom, "GeomPoint")
   expect_s3_class(plt$layers[[5]]$geom, "GeomPoint")
   expect_error(autoplot(boot_est, wtp = 60000, QALYs = "X"), class = "cea_error_unknown_outcome")
+
+  plt <- autoplot(boot_est_fct)
+  expect_s3_class(plt, "gg")
+  expect_length(plt$layers, 3)
+  expect_s3_class(plt$layers[[1]]$geom, "GeomHline")
+  expect_s3_class(plt$layers[[2]]$geom, "GeomVline")
+  expect_s3_class(plt$layers[[3]]$geom, "GeomPoint")
+  expect_mapequal(
+    plt$labels,
+    list(y = "Incremental Costs", x = "Incremental QALYs", colour = ".tx", shape = ".tx",
+         yintercept = "yintercept", xintercept = "xintercept")
+  )
 })
 
 test_that("plot.cea_boot works as expected", {
-  plt <- with_sink(tempfile(), plot(boot_est))
+  plt <- with_null_pdf(plot(boot_est))
   expect_s3_class(plt, "gg")
   expect_equal(unname(as.matrix(plt$data)), boot_est$t)
   expect_length(plt$layers, 4)
@@ -64,3 +86,4 @@ test_that("plot.cea_boot works as expected", {
          xintercept = "xintercept")
   )
 })
+

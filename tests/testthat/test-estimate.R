@@ -6,29 +6,29 @@ test_that("estimate works with default specification", {
 })
 
 test_that("estimate gives appropriate messages", {
-  expect_error(estimate(1, "Cost", "booster", c("age", "sex"), data = moa2),
+  expect_error(estimate(1, "Cost", "booster", c("age", "sex"), data = moa2_ex),
                class = "cea_error_not_string")
-  expect_error(estimate("QALYs", 2, "booster", c("age", "sex"), data = moa2),
+  expect_error(estimate("QALYs", 2, "booster", c("age", "sex"), data = moa2_ex),
                class = "cea_error_not_string")
-  expect_error(estimate("QALYs", "Cost", 3, c("age", "sex"), data = moa2),
+  expect_error(estimate("QALYs", "Cost", 3, c("age", "sex"), data = moa2_ex),
                class = "cea_error_not_string")
-  expect_error(estimate("QALYs", "Cost", "booster", 4, data = moa2),
+  expect_error(estimate("QALYs", "Cost", "booster", 4, data = moa2_ex),
                class = "cea_error_not_character")
-  expect_error(estimate("qalys", "Cost", "booster", c("age", "sex"), data = moa2),
+  expect_error(estimate("qalys", "Cost", "booster", c("age", "sex"), data = moa2_ex),
                class = "cea_error_variable_not_found")
-  expect_error(estimate("QALYs", "costs", "booster", c("age", "sex"), data = moa2),
+  expect_error(estimate("QALYs", "costs", "booster", c("age", "sex"), data = moa2_ex),
                class = "cea_error_variable_not_found")
-  expect_error(estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2),
+  expect_error(estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2_ex),
                class = "cea_error_variable_not_found")
-  expect_error(estimate("QALYs", "Cost", "booster", c("age", "gender"), data = moa2),
+  expect_error(estimate("QALYs", "Cost", "booster", c("age", "gender"), data = moa2_ex),
                class = "cea_error_variable_not_found")
   expect_warning(
-    estimate("QALYs", "Cost", "tx", linear_pred = list(Cost ~ booster + age + sex), data = moa2),
+    estimate("QALYs", "Cost", "tx", linear_pred = list(Cost ~ booster + age + sex), data = moa2_ex),
     class = "cea_warning_formula_override"
   )
   suppressWarnings(expect_error(
     estimate("QALYs", "Cost", 1, linear_pred = list(Cost ~ booster + age + sex),
-             c("age", "sex"), data = moa2),
+             c("age", "sex"), data = moa2_ex),
     class = "cea_error_not_string"
   ))
 })
@@ -40,8 +40,8 @@ test_that("estimate works with custom `linear_pred`", {
 })
 
 test_that("estimate works with list data", {
-  moa2 <- as.list(moa2)
-  fit_list <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2)
+  moa2_ex <- as.list(moa2_ex)
+  fit_list <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_ex)
 
   expect_s3_class(fit, "cea_estimate")
   expect_s3_class(fit, "mcglm")
@@ -49,14 +49,14 @@ test_that("estimate works with list data", {
 })
 
 test_that("estimate works with missing covars", {
-  fit <- estimate("QALYs", "Cost", "booster", data = moa2)
+  fit <- estimate("QALYs", "Cost", "booster", data = moa2_ex)
   fit2 <- with_sink(
     tempfile(),
     mcglm::mcglm(
       linear_pred = c(QALYs = QALYs ~ booster, Costs = Cost ~ booster),
-      matrix_pred = list(mcglm::mc_id(moa2), mcglm::mc_id(moa2)),
+      matrix_pred = list(mcglm::mc_id(moa2_ex), mcglm::mc_id(moa2_ex)),
       link = c("identity", "log"), variance = c("constant", "tweedie"),
-      data = moa2
+      data = moa2_ex
     )
   )
 
@@ -68,4 +68,5 @@ test_that("estimate works with missing covars", {
 test_that("print.cea_estimate works", {
   expect_snapshot_output(fit)
   with_sink(tempfile(), expect_equal(print(fit), fit))
+  expect_snapshot_output(fit_fct)
 })

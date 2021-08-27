@@ -34,28 +34,18 @@ ceac.cea_estimate <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Co
     stop_unknown_outcome(c(QALYs, Costs)[which.max(!(c(QALYs, Costs) %in% names(x$linear_pred)))])
 
   wtp <- seq.int(0, wtp_max, wtp_step)
+  n_tx <- length(extract_tx(x))
 
   if (method == "delta") {
-    V <- extract_var(x)
-    dmu.QALYs <- extract_dmu(x, QALYs, estimand)
-    dmu.Costs <- extract_dmu(x, Costs, estimand)
-    ceac <- vapply(
-      wtp,
-      function(a) stats::pnorm(0, INMB(x, a, estimand), delta_se(dmu.QALYs * a - dmu.Costs, V),
-                               lower.tail = FALSE),
-      numeric(1)
-    )
-    out <- tibble::tibble(wtp = wtp, ceac = ceac)
+    extract_ceac <- calculate_delta_ceac(x, wtp, QALYs, Costs, estimand)
   } else if (method == "boot") {
     boot_est <- boot(x, R = R, estimand = estimand, sim = sim, ...)
-
-    idxs <- c(which(names(boot_est$t0) == QALYs), which(names(boot_est$t0) == Costs))
-
-    out <- tibble::tibble(
-      wtp = wtp,
-      ceac = colMeans((boot_est$t[, idxs] %*% rbind(wtp, -1)) > 0)
-    )
+    extract_ceac <- calculate_boot_ceac(boot_est, wtp, QALYs, Costs)
   }
+
+  ceac <- lapply(seq_len(n_tx), extract_ceac)
+  out <- tibble::tibble(wtp = rep(wtp, n_tx), ceac = unlist(ceac))
+  if (is_factor_tx(x)) out$tx = rep(extract_tx(x), each = length(wtp))
 
   class(out) <- c("cea_ceac", class(out))
   attr(out, "method") <- method
@@ -68,16 +58,19 @@ ceac.cea_estimate <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Co
 #' @rdname ceac
 #' @export
 ceac.cea_boot <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs", ...) {
-  if (!all(c(QALYs, Costs) %in% names(x$t0)))
-    stop_unknown_outcome(c(QALYs, Costs)[which.max(!(c(QALYs, Costs) %in% names(x$t0)))])
+  mult_tx <- is.matrix(x$t0)
+  nm <- if (mult_tx) colnames(x$t0) else names(x$t0)
+  if (!all(c(QALYs, Costs) %in% nm))
+    stop_unknown_outcome(c(QALYs, Costs)[which.max(!(c(QALYs, Costs) %in% nm))])
 
   wtp <- seq.int(0, wtp_max, wtp_step)
-  idxs <- c(which(names(x$t0) == QALYs), which(names(x$t0) == Costs))
+  n_tx <- nrow(x$t0) %||% 1
 
-  out <- tibble::tibble(
-    wtp = wtp,
-    ceac = colMeans((x$t[, idxs] %*% rbind(wtp, -1)) > 0)
-  )
+  extract_ceac <- calculate_boot_ceac(x, wtp, QALYs, Costs)
+
+  ceac <- lapply(seq_len(n_tx), extract_ceac)
+  out <- tibble::tibble(wtp = rep(wtp, n_tx), ceac = unlist(ceac))
+  if (is_factor_tx(x)) out$tx = rep(attr(x, "tx"), each = length(wtp))
 
   class(out) <- c("cea_ceac", class(out))
   attr(out, "method") <- "boot"
@@ -89,7 +82,10 @@ ceac.cea_boot <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs"
 
 #' @export
 autoplot.cea_ceac <- function(object, wtp = NULL, ...) {
-  out <- ggplot2::ggplot(object, ggplot2::aes(.data$wtp, .data$ceac))
+  out <- if (("tx" %in% names(object))) {
+    ggplot2::ggplot(object,
+                    ggplot2::aes(.data$wtp, .data$ceac, colour = .data$tx, linetype = .data$tx))
+  } else ggplot2::ggplot(object, ggplot2::aes(.data$wtp, .data$ceac))
   if (!is.null(wtp)) out <- out + ggplot2::geom_vline(xintercept = wtp, colour = "red", alpha = 0.5)
   out <- out +
     ggplot2::geom_line() +
@@ -98,10 +94,39 @@ autoplot.cea_ceac <- function(object, wtp = NULL, ...) {
                                 limits = c(0, 1)) +
     ggplot2::scale_x_continuous(labels = scales::label_dollar())
 
+  if (("tx" %in% names(object))) out <- out +
+    ggplot2::scale_color_brewer("Treatment group", type = "qual", palette = 2) +
+    ggplot2::scale_linetype_discrete("Treatment group")
+
   out
 }
 
 #' @export
 plot.cea_ceac <- function(x, ...) {
   print(autoplot(x, ...))
+}
+
+calculate_boot_ceac <- function(x, wtp, QALYs = "QALYs", Costs = "Costs", ...) {
+  idx.QALYs <- which((names(x$t0) %||% colnames(x$t0)[slice.index(x$t0, 2)]) == QALYs)
+  idx.Costs <- which((names(x$t0) %||% colnames(x$t0)[slice.index(x$t0, 2)]) == Costs)
+  force(x)
+  force(wtp)
+  function(j) {
+    colMeans((x$t[, c(idx.QALYs[[j]], idx.Costs[[j]])] %*% rbind(wtp, -1)) > 0)
+  }
+}
+
+calculate_delta_ceac <- function(x, wtp, QALYs, Costs, estimand, ...) {
+  V <- extract_var(x)
+  dmu.QALYs <- extract_dmu(x, QALYs, estimand)
+  dmu.Costs <- extract_dmu(x, Costs, estimand)
+  function(j) {
+    vapply(
+      wtp,
+      function(a) stats::pnorm(0, INMB(x, a, estimand)[[j]],
+                               delta_se(dmu.QALYs[[j]] * a - dmu.Costs[[j]], V),
+                               lower.tail = FALSE),
+      numeric(1)
+    )
+  }
 }

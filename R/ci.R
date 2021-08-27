@@ -73,9 +73,10 @@ ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp,
 #' @rdname ci
 #' @export
 ci.cea_boot <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, ...) {
-  if (!all(outcomes %in% c(names(x$t0), "INMB", "INHB"))) stop_unknown_outcome(
-    outcomes[which.max(!(outcomes %in% c(names(x$t0), "INMB", "INHB")))]
-  )
+  mult_tx <- is.matrix(x$t0)
+  nm <- if (mult_tx) colnames(x$t0) else names(x$t0)
+  if (!all(outcomes %in% c(nm, "INMB", "INHB")))
+    stop_unknown_outcome(outcomes[which.max(!(outcomes %in% c(nm, "INMB", "INHB")))])
   if (any(c("INMB", "INHB") %in% outcomes) && missing(wtp)) stop_missing_wtp()
   if (!(type %in% c("perc", "norm", "basic", "bca"))) stop_invalid_ci_type(type)
   if (type == "bca" & x$sim == "parametric") stop_invalid_bca_parametric()
@@ -121,8 +122,12 @@ print.cea_ci <- function(x, ...) {
   } else if (method == "delta") {
     cat("Based on delta approximation")
   }
-  cat("\n\n")
-  print(unclass(x))
+  cat("\n")
+  for (i in seq_along(x)) {
+    cat("\n", names(x)[[i]], ":\n", sep = "")
+    print(x[[i]])
+  }
+  # print(unclass(x))
 
   invisible(y)
 }
@@ -130,26 +135,41 @@ print.cea_ci <- function(x, ...) {
 calculate_boot_cis <- function(x, outcomes, conf, type, wtp) {
   out <- list()
 
-  if (any(c("INMB", "INHB", "QALYs") %in% outcomes)) idx.QALYs <- which(names(x$t0) == "QALYs")
-  if (any(c("INMB", "INHB", "Costs") %in% outcomes)) idx.Costs <- which(names(x$t0) == "Costs")
+  if (any(c("INMB", "INHB", "QALYs") %in% outcomes))
+    idx.QALYs <- which((names(x$t0) %||% colnames(x$t0)[slice.index(x$t0, 2)]) == "QALYs")
+  if (any(c("INMB", "INHB", "Costs") %in% outcomes))
+    idx.Costs <- which((names(x$t0) %||% colnames(x$t0)[slice.index(x$t0, 2)]) == "Costs")
 
   for (i in outcomes) {
     out[[i]] <- switch(
       i,
-      QALYs = boot::boot.ci(x, conf = conf, type = type, index = idx.QALYs),
-      Costs = boot::boot.ci(x, conf = conf, type = type, index = idx.Costs),
-      INMB = boot::boot.ci(x, conf = conf, type = type,
-                           t0 = rlang::set_names(x$t0["QALYs"] * wtp - x$t0["Costs"], "INMB"),
-                           t = x$t[, idx.QALYs] * wtp - x$t[, idx.Costs]),
-      INHB = boot::boot.ci(x, conf = conf, type = type,
-                           t0 = rlang::set_names(x$t0["QALYs"] - x$t0["Costs"] / wtp, "INHB"),
-                           t = x$t[, idx.QALYs] - x$t[, idx.Costs] / wtp),
-      boot::boot.ci(x, conf = conf, type = type, index = which(names(x$t0) == i))
+      QALYs = lapply(idx.QALYs, function(j) boot::boot.ci(x, conf = conf, type = type, index = j)),
+      Costs = lapply(idx.Costs, function(j) boot::boot.ci(x, conf = conf, type = type, index = j)),
+      INMB = lapply(
+        seq_along(idx.QALYs),
+        function(j) boot::boot.ci(
+          x, conf = conf, type = type,
+          t0 = rlang::set_names(x$t0["QALYs"] * wtp - x$t0["Costs"], "INMB"),
+          t = x$t[, idx.QALYs[[j]]] * wtp - x$t[, idx.Costs[[j]]]
+        )
+      ),
+      INHB = lapply(
+        seq_along(idx.QALYs),
+        function(j) boot::boot.ci(
+          x, conf = conf, type = type,
+          t0 = rlang::set_names(x$t0["QALYs"] - x$t0["Costs"] / wtp, "INHB"),
+          t = x$t[, idx.QALYs[[j]]] - x$t[, idx.Costs[[j]]] / wtp
+        )
+      ),
+      {
+        idx <- which(names(x$t0) %||% colnames(x$t0)[slice.index(x$t0, 2)] == i)
+        lapply(idx, function(j) boot::boot.ci(x, conf = conf, type = type, index = j))
+      }
     )
-    out[[i]] <- out[[i]][[4]][1, ncol(out[[i]][[4]]) - (1:0)]
+    out[[i]] <- t(vapply(out[[i]], function(z) z[[4]][1, ncol(z[[4]]) - (1:0)], numeric(2)))
+    colnames(out[[i]]) <- c("Lower", "Upper")
+    rownames(out[[i]]) <- attr(x, "tx")
   }
-  out <- rlang::exec(rbind, !!!out)
-  colnames(out) <- c("Lower", "Upper")
   out
 }
 
@@ -163,15 +183,26 @@ calculate_delta_cis <- function(x, outcomes, conf, wtp, estimand) {
   for (i in outcomes) {
     out[[i]] <- switch(
       i,
-      QALYs = c(QALYs(x, estimand), delta_se(dmu.QALYs, V)),
-      Costs = c(Costs(x, estimand), delta_se(dmu.Costs, V)),
-      INMB = c(INMB(x, wtp, estimand), delta_se(dmu.QALYs * wtp - dmu.Costs, V)),
-      INHB = c(INHB(x, wtp, estimand), delta_se(dmu.QALYs - dmu.Costs / wtp, V)),
-      c(extract(x, i, estimand), delta_se(extract_dmu(x, i, estimand), V))
+      QALYs = lapply(seq_along(dmu.QALYs),
+                     function(j) c(QALYs(x, estimand)[[j]], delta_se(dmu.QALYs[[j]], V))),
+      Costs = lapply(seq_along(dmu.Costs),
+                     function(j) c(Costs(x, estimand)[[j]], delta_se(dmu.Costs[[j]], V))),
+      INMB = lapply(
+        seq_along(dmu.QALYs),
+        function(j) c(INMB(x, wtp, estimand), delta_se(dmu.QALYs[[j]] * wtp - dmu.Costs[[j]], V))
+      ),
+      INHB = lapply(
+        seq_along(dmu.QALYs),
+        function(j) c(INHB(x, wtp, estimand), delta_se(dmu.QALYs[[j]] - dmu.Costs[[j]] / wtp, V))
+      ),
+      lapply(extract_dmu(x, i, estimand),
+             function(j) c(extract(x, i, estimand), delta_se(j, V)))
     )
-    out[[i]] <- out[[i]][[1]] + c(-1, 1) * stats::qnorm(1 - (1 - conf) / 2) * out[[i]][[2]]
+    out[[i]] <- t(vapply(out[[i]],
+                         function(z) z[[1]] + c(-1, 1) * stats::qnorm(1 - (1 - conf) / 2) * z[[2]],
+                         numeric(2)))
+    colnames(out[[i]]) <- c("Lower", "Upper")
+    rownames(out[[i]]) <- extract_tx(x)
   }
-  out <- rlang::exec(rbind, !!!out)
-  colnames(out) <- c("Lower", "Upper")
   out
 }

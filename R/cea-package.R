@@ -7,6 +7,6 @@
 ## usethis namespace: end
 NULL
 
-#' @importFrom rlang .data
+#' @importFrom rlang .data %||%
 #' @importFrom ggplot2 autoplot
 NULL

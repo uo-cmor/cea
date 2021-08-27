@@ -1,5 +1,6 @@
 test_that("QALYs works as expected", {
-  expect_equal(QALYs(fit), 0.074458875)
+  expect_equal(QALYs(fit), setNames(0.06957871, ""))
+  expect_equal(QALYs(fit_fct), c(ExB = 0.088299212, MT = 0.170677168, "MT + ExB" = 0.007374031))
 })
 
 test_that("QALYs gives appropriate error messages", {
@@ -7,9 +8,11 @@ test_that("QALYs gives appropriate error messages", {
 })
 
 test_that("Costs works as expected", {
-  expect_equal(Costs(fit), 2022.699)
-  expect_equal(Costs(fit, "ATT"), 2024.0034)
-  expect_equal(Costs(fit, "ATC"), 2021.39456)
+  expect_equal(Costs(fit), setNames(2088.4017, ""), tolerance = 1e-7)
+  expect_equal(Costs(fit, "ATT"), setNames(2071.1476, ""), tolerance = 1e-7)
+  expect_equal(Costs(fit, "ATC"), setNames(2105.6559, ""), tolerance = 1e-7)
+  expect_equal(Costs(fit_fct), c(ExB = 2369.5783, MT = 2356.9875, "MT + ExB" = 1466.3891),
+               tolerance = 1e-7)
 })
 
 test_that("Costs gives appropriate error messages", {
@@ -18,7 +21,7 @@ test_that("Costs gives appropriate error messages", {
 })
 
 test_that("ICER works as expected", {
-  expect_equal(ICER(fit), 27165.318)
+  expect_equal(ICER(fit), setNames(30014.953, ""), tolerance = 1e-7)
 })
 
 test_that("ICER gives appropriate error messages", {
@@ -26,7 +29,7 @@ test_that("ICER gives appropriate error messages", {
 })
 
 test_that("INMB works as expected", {
-  expect_equal(INMB(fit, 60000), 2444.8335)
+  expect_equal(INMB(fit, 60000), setNames(2086.321, ""), tolerance = 1e-7)
 })
 
 test_that("INMB gives appropriate error messages", {
@@ -34,7 +37,7 @@ test_that("INMB gives appropriate error messages", {
 })
 
 test_that("INHB works as expected", {
-  expect_equal(INHB(fit, 60000), 0.040747225)
+  expect_equal(INHB(fit, 60000), setNames(0.034772015, ""), tolerance = 1e-7)
 })
 
 test_that("INHB gives appropriate error messages", {
