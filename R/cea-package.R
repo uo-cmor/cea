@@ -8,4 +8,5 @@
 NULL
 
 #' @importFrom rlang .data
+#' @importFrom ggplot2 autoplot
 NULL

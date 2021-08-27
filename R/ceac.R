@@ -87,7 +87,6 @@ ceac.cea_boot <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs"
   out
 }
 
-#' @importFrom ggplot2 autoplot
 #' @export
 autoplot.cea_ceac <- function(object, wtp = NULL, ...) {
   out <- ggplot2::ggplot(object, ggplot2::aes(.data$wtp, .data$ceac))

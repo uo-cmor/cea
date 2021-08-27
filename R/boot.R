@@ -58,3 +58,27 @@ boot <- function(x, R, estimand = "ATE", sim = "ordinary", weights = NULL,
   class(out) <- c("cea_boot", class(out))
   out
 }
+
+#' @export
+autoplot.cea_boot <- function(object, wtp = NULL, QALYs = "QALYs", Costs = "Costs", ...) {
+  if (!all(c(QALYs, Costs) %in% names(object$t0)))
+    stop_unknown_outcome(c(QALYs, Costs)[which.max(!(c(QALYs, Costs) %in% names(object$t0)))])
+
+  plotdata <- tibble::as_tibble(object$t, .name_repair = ~names(object$t0))
+
+  out <- ggplot2::ggplot(plotdata, ggplot2::aes(.data[[QALYs]], .data[[Costs]])) +
+    ggplot2::geom_hline(yintercept = 0) + ggplot2::geom_vline(xintercept = 0)
+  if (!is.null(wtp)) out <- out + ggplot2::geom_abline(slope = wtp, colour = "red", alpha = 0.5)
+  out <- out +
+    ggplot2::geom_point() +
+    ggplot2::geom_point(ggplot2::aes(object$t0[[!!QALYs]], object$t0[[!!Costs]]), size = 3, colour = "red") +
+    ggplot2::xlab("Incremental QALYs") + ggplot2::ylab("Incremental Costs") +
+    ggplot2::scale_y_continuous(labels = scales::label_dollar())
+
+  out
+}
+
+#' @export
+plot.cea_boot <- function(x, ...) {
+  print(autoplot(x, ...))
+}
