@@ -69,7 +69,7 @@ autoplot.cea_boot <- function(object, wtp = NULL, QALYs = "QALYs", Costs = "Cost
 
   if (mult_tx) dim(object$t) <- c(object$R * nrow(object$t0), ncol(object$t0))
   plotdata <- tibble::as_tibble(object$t, .name_repair = ~nm)
-  if (mult_tx) plotdata$.tx <- factor(rep(seq_len(nrow(object$t0)), object$R))
+  if (mult_tx) plotdata$.tx <- factor(rep(rownames(object$t0), object$R))
 
 
   out <- if (mult_tx) {
