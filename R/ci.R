@@ -189,14 +189,14 @@ calculate_delta_cis <- function(x, outcomes, conf, wtp, estimand) {
                      function(j) c(Costs(x, estimand)[[j]], delta_se(dmu.Costs[[j]], V))),
       INMB = lapply(
         seq_along(dmu.QALYs),
-        function(j) c(INMB(x, wtp, estimand), delta_se(dmu.QALYs[[j]] * wtp - dmu.Costs[[j]], V))
+        function(j) c(INMB(x, wtp, estimand)[[j]], delta_se(dmu.QALYs[[j]] * wtp - dmu.Costs[[j]], V))
       ),
       INHB = lapply(
         seq_along(dmu.QALYs),
-        function(j) c(INHB(x, wtp, estimand), delta_se(dmu.QALYs[[j]] - dmu.Costs[[j]] / wtp, V))
+        function(j) c(INHB(x, wtp, estimand)[[j]], delta_se(dmu.QALYs[[j]] - dmu.Costs[[j]] / wtp, V))
       ),
       lapply(extract_dmu(x, i, estimand),
-             function(j) c(extract(x, i, estimand), delta_se(j, V)))
+             function(j) c(extract(x, i, estimand)[[j]], delta_se(j, V)))
     )
     out[[i]] <- t(vapply(out[[i]],
                          function(z) z[[1]] + c(-1, 1) * stats::qnorm(1 - (1 - conf) / 2) * z[[2]],

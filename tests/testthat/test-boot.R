@@ -25,6 +25,9 @@ test_that("boot works with factor treatment variable", {
   expect_equal(dim(boot_est_fct$t), c(9, 6))
   expect_equal(boot_est_fct$R, 9)
   expect_equal(boot_est_fct$sim, "parametric")
+  expect_equal(attr(boot_est_fct, "tx"), c("ExB", "MT", "MT + ExB"))
+  expect_s3_class(boot_est_fct2, "cea_boot")
+  expect_equal(attr(boot_est_fct2, "tx"), c("Ex", "MT", "MT + ExB"))
 })
 
 test_that("boot gives appropriate error messages", {

@@ -3,6 +3,7 @@ fit_ceac_fct <- ceac(fit_fct, R = 9, wtp_max = 100000, wtp_step = 10000)
 fit_ceac_delta <- ceac(fit, wtp_max = 100000, wtp_step = 10000, method = "delta")
 fit_ceac_boot <- ceac(boot_est, wtp_max = 100000, wtp_step = 10000)
 fit_ceac_boot_fct <- ceac(boot_est_fct, wtp_max = 100000, wtp_step = 10000)
+fit_ceac_boot_fct2 <- ceac(boot_est_fct2, wtp_max = 100000, wtp_step = 10000)
 
 test_that("ceac works with cea_estimate objects", {
   expect_s3_class(fit_ceac, "cea_ceac")
@@ -55,6 +56,9 @@ test_that("ceac works with cea_boot objects", {
   expect_equal(attr(fit_ceac_boot_fct, "method"), "boot")
   expect_equal(attr(fit_ceac_boot_fct, "R"), 9)
   expect_equal(attr(fit_ceac_boot_fct, "sim"), "parametric")
+
+  expect_s3_class(fit_ceac_boot_fct2, "cea_ceac")
+  expect_equal(fit_ceac_boot_fct2$tx, rep(c("Ex", "MT", "MT + ExB"), each = 11))
 })
 
 test_that("ceac gives appropriate errors", {

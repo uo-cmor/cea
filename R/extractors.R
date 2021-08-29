@@ -50,7 +50,7 @@ extract <- function(x, outcome, estimand = "ATE") {
   if (length(idx <- which(names(x$linear_pred) == outcome)) == 0) stop_unknown_outcome(outcome)
   tx <- attr(x, "tx")
   if (is.null(x$data[[tx]])) stop_unknown_treatment(tx)
-  if (is.factor(x$data[[tx]])) tx <- paste0(tx, levels(x$data[[tx]])[-1])
+  if (is.factor(x$data[[tx]])) tx <- paste0(tx, extract_tx(x))
   idx_tx <- which(x$beta_names[[idx]] %in% tx)
 
   if (x$link[[idx]] == "identity") {
@@ -65,17 +65,20 @@ extract <- function(x, outcome, estimand = "ATE") {
   coefs <- x$Regression[idx_coef]
 
   extract_effect <- function(i) {
-    X0 <- X1 <- x$list_X[[idx]]
+    X <- x$list_X[[idx]]
+    X[, setdiff(idx_tx, i)] <- 0
+    X0 <- X1 <- X
     X0[, i] <- 0
     X1[, i] <- 1
     if (estimand != "ATE") {
-      tx_values <- x$list_X[[idx]][, i]
+      tx0 <- rowSums(X[, idx_tx, drop = FALSE]) == 0
+      tx1 <- X[, i] == 1
       if (estimand == "ATT") {
-        X0 <- X0[tx_values == 1, ]
-        X1 <- X1[tx_values == 1, ]
+        X0 <- X0[tx1, ]
+        X1 <- X1[tx1, ]
       } else if (estimand == "ATC") {
-        X0 <- X0[tx_values == 0, ]
-        X1 <- X1[tx_values == 0, ]
+        X0 <- X0[tx0, ]
+        X1 <- X1[tx0, ]
       } else {
         stop_unknown_estimand(estimand)
       }
@@ -91,6 +94,8 @@ extract <- function(x, outcome, estimand = "ATE") {
 }
 
 extract_tx <- function(x) {
+  if (!is.factor(x$data[[attr(x, "tx")]])) return("")
+
   tx_vars <- x$beta_names[[1]][grepl(attr(x, "tx"), x$beta_names[[1]])]
   sub(attr(x, "tx"), "", tx_vars)
 }

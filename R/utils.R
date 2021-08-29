@@ -10,3 +10,8 @@ with_null_pdf <- function(code) {
   force(code)
 }
 
+is_valid_treatment <- function(x) {
+  if (is.logical(x) || is.factor(x)) return(TRUE)
+  if (!is.numeric(x)) return(FALSE)
+  all(x %in% 0:1)
+}

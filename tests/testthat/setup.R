@@ -2,6 +2,13 @@ fit <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_ex)
 
 fit_fct <- estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2)
 
+moa2_base_exb <- moa2
+contrasts(moa2_base_exb$tx) <- contr.treatment(levels(moa2_base_exb$tx), base = 2)
+fit_fct2 <- estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2_base_exb)
+
+moa2_chr <- moa2_ex
+moa2_chr$booster <- as.character(moa2_chr$booster)
+
 fit_mcglm <- with_sink(
   tempfile(),
   mcglm::mcglm(
@@ -21,3 +28,4 @@ fit_lp <- estimate(
 boot_est <- boot(fit, R = 9)
 boot_est_par <- boot(fit, R = 9, sim = "parametric")
 boot_est_fct <- boot(fit_fct, R = 9, sim = "parametric")
+boot_est_fct2 <- boot(fit_fct2, R = 9, sim = "parametric")

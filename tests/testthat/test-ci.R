@@ -2,6 +2,12 @@ suppressWarnings({
   fit_ci <- ci(fit, c("QALYs", "Costs", "INMB"), conf = 0.8, type = "perc", R = 9, wtp = 60000)
   fit_ci_delta <- ci(fit, c("QALYs", "Costs", "INMB"), conf = 0.8, wtp = 60000, method = "delta")
   fit_ci_boot <- ci(boot_est, c("QALYs", "Costs", "INMB"), conf = 0.8, type = "perc", wtp = 60000)
+  fit_ci_fct <- ci(fit_fct, c("QALYs", "Costs", "INMB"), conf = 0.8, type = "perc", R = 9,
+                   wtp = 60000)
+  fit_ci_fct_delta <- ci(fit_fct, c("QALYs", "Costs", "INMB"), conf = 0.8, wtp = 60000,
+                         method = "delta")
+  fit_ci_fct_delta2 <- ci(fit_fct2, c("QALYs", "Costs", "INMB"), conf = 0.8, wtp = 60000,
+                          method = "delta")
 })
 
 test_that("ci works with cea_estimate objects", {
@@ -26,6 +32,22 @@ test_that("ci works with delta method", {
   expect_true(fit_ci_delta[[3]][, 1] < fit_ci_delta[[3]][, 2])
   expect_equal(attr(fit_ci_delta, "conf"), 0.8)
   expect_equal(attr(fit_ci_delta, "method"), "delta")
+})
+
+test_that("ci works with factor treatments", {
+  expect_s3_class(fit_ci_fct, "cea_ci")
+  expect_length(fit_ci_fct, 3)
+  expect_equal(dim(fit_ci_fct[[1]]), c(3, 2))
+  expect_true(all(fit_ci_fct[[1]][, 1] < fit_ci_fct[[1]][, 2]))
+  expect_true(all(fit_ci_fct[[2]][, 1] < fit_ci_fct[[2]][, 2]))
+  expect_true(all(fit_ci_fct[[3]][, 1] < fit_ci_fct[[3]][, 2]))
+  expect_equal(attr(fit_ci_fct, "conf"), 0.8)
+  expect_equal(attr(fit_ci_fct, "method"), "boot")
+  expect_equal(attr(fit_ci_fct, "type"), "perc")
+  expect_equal(attr(fit_ci_fct, "R"), 9)
+
+  expect_s3_class(fit_ci_fct_delta, "cea_ci")
+  expect_equal(fit_ci_fct_delta$QALYs[1, ], -fit_ci_fct_delta2$QALYs[1, 2:1], ignore_attr = TRUE)
 })
 
 test_that("ci works with cea_boot objects", {

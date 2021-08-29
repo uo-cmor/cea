@@ -3,6 +3,8 @@ test_that("estimate works with default specification", {
   expect_s3_class(fit, "mcglm")
   expect_equal(fit, fit_mcglm,
                ignore_attr = c("class", "tx", "call"), ignore_formula_env = TRUE)
+  expect_s3_class(fit_fct, "cea_estimate")
+  expect_s3_class(fit_fct2, "cea_estimate")
 })
 
 test_that("estimate gives appropriate messages", {
@@ -20,10 +22,13 @@ test_that("estimate gives appropriate messages", {
                class = "cea_error_variable_not_found")
   expect_error(estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2_ex),
                class = "cea_error_variable_not_found")
+  expect_error(estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_chr),
+               class = "cea_error_invalid_treatment")
   expect_error(estimate("QALYs", "Cost", "booster", c("age", "gender"), data = moa2_ex),
                class = "cea_error_variable_not_found")
   expect_warning(
-    estimate("QALYs", "Cost", "tx", linear_pred = list(Cost ~ booster + age + sex), data = moa2_ex),
+    estimate("QALYs", "Cost", "booster", linear_pred = list(Cost ~ booster + age + sex),
+             data = moa2_ex),
     class = "cea_warning_formula_override"
   )
   suppressWarnings(expect_error(

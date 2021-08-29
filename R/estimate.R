@@ -85,13 +85,18 @@ estimate <- function(QALYs, costs, treatment, covars, data,
     if (is.null(linear_pred)) variance <- c("constant", "tweedie")
     else variance <- rep("constant", length(linear_pred))
   }
+
+  if (!rlang::is_string(treatment)) stop_not_string("treatment")
+  if (!(treatment %in% names(data))) stop_variable_not_found(treatment, "data")
+  if (!(is_valid_treatment(data[[treatment]])))
+    stop_invalid_treatment(treatment, class(data[[treatment]]))
+  if (!is.factor(data[[treatment]])) data[[treatment]] <- as.integer(data[[treatment]])
+
   if (is.null(linear_pred)) {
     if (!rlang::is_string(QALYs)) stop_not_string("QALYs")
     if (!rlang::is_string(costs)) stop_not_string("costs")
-    if (!rlang::is_string(treatment)) stop_not_string("treatment")
     if (!(QALYs %in% names(data))) stop_variable_not_found(QALYs, "data")
     if (!(costs %in% names(data))) stop_variable_not_found(costs, "data")
-    if (!(treatment %in% names(data))) stop_variable_not_found(treatment, "data")
     if (!missing(covars)) {
       if (!rlang::is_character(covars)) stop_not_character("covars")
       if (!all(covars %in% names(data)))
@@ -105,7 +110,6 @@ estimate <- function(QALYs, costs, treatment, covars, data,
   } else {
     if (!missing(QALYs) || !missing(costs) || !missing(covars))
       warn_formula_override()
-    if (!rlang::is_string(treatment)) stop_not_string("treatment")
   }
   n_outcome <- length(linear_pred)
 

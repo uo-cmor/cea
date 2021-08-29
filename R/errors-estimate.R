@@ -25,3 +25,13 @@ stop_variable_not_found <- function(var, df) {
   x <- paste0("Can't find column `", var, "` in `", df, "`.")
   rlang::cnd_signal(rlang::error_cnd("cea_error_variable_not_found", message = x))
 }
+
+stop_invalid_treatment <- function(tx, type) {
+  x <- paste0(
+    "Treatment variable must be a factor or 0/1 dummy variable.\n",
+    rlang::format_error_bullets(c(
+      i = paste0("Variable `", tx, "` in `data` is of type '", type, "'.")
+    ))
+  )
+  rlang::cnd_signal(rlang::error_cnd("cea_error_invalid_treatment", message = x))
+}
