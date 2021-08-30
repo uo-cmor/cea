@@ -4,7 +4,8 @@
     === Cost-Effectiveness Regression Estimates ===
     ===============================================
     
-    Call: estimate(QALYs = "QALYs", costs = "Cost", treatment = "booster", 
+    Call:
+     estimate.data.frame(QALYs = "QALYs", costs = "Cost", treatment = "booster", 
         covars = c("age", "sex"), data = moa2_ex) 
     
     ------------------
@@ -34,8 +35,9 @@
     === Cost-Effectiveness Regression Estimates ===
     ===============================================
     
-    Call: estimate(QALYs = "QALYs", costs = "Cost", treatment = "tx", covars = c("age", 
-        "sex"), data = moa2) 
+    Call:
+     estimate.data.frame(QALYs = "QALYs", costs = "Cost", treatment = "tx", 
+        covars = c("age", "sex"), data = moa2) 
     
     ------------------
     Univariate Models:
@@ -52,6 +54,44 @@
     
     ------------------
     Incremental Treatment Effects:
+                    ExB         MT   MT + ExB 
+      QALYs:     +0.088     +0.171     +0.007 
+      Costs:      +1875      +1834      +1094 
+      ICER:       21240      10744     148299 
+    
+    ===============================================
+
+---
+
+    ================================================================
+    === Multiply-Imputed Cost-Effectiveness Regression Estimates ===
+    ================================================================
+    Based on 2 imputed datasets.
+    
+    Call:
+     estimate.mids(QALYs = "QALYs", costs = "Cost", treatment = "tx", 
+        covars = c("age", "sex"), data = moa2_mi) 
+    
+    Data:
+     mice(data = data, m = m, where = where, maxit = 0, remove.collinear = FALSE, 
+        allow.na = TRUE) 
+    
+    ------------------
+    Univariate Models:
+    
+      QALYs: QALYs ~ tx + age + sex
+        * Link function: identity 
+        * Variance function: constant 
+        * Covariance function: identity 
+    
+      Costs: Cost ~ tx + age + sex
+        * Link function: log 
+        * Variance function: tweedie 
+        * Covariance function: identity 
+    
+    ------------------
+    Incremental Treatment Effects:
+    (From first imputed dataset; use `pool_cea()` to compute pooled estimates)
                     ExB         MT   MT + ExB 
       QALYs:     +0.088     +0.171     +0.007 
       Costs:      +1875      +1834      +1094 

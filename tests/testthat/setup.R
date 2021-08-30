@@ -25,6 +25,11 @@ fit_lp <- estimate(
   data = moa2_ex
 )
 
+moa2_mi <- rbind(moa2, moa2, moa2)
+moa2_mi$.imp <- as.character(rep(0:2, each = nrow(moa2)))
+moa2_mi <- mice::as.mids(moa2_mi)
+fit_mi <- estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2_mi)
+
 boot_est <- boot(fit, R = 9)
 boot_est_par <- boot(fit, R = 9, sim = "parametric")
 boot_est_fct <- boot(fit_fct, R = 9, sim = "parametric")

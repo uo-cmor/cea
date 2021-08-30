@@ -36,6 +36,20 @@ test_that("estimate gives appropriate messages", {
              c("age", "sex"), data = moa2_ex),
     class = "cea_error_not_string"
   ))
+  expect_error(
+    withr::with_options(
+      list("rlang:::is_installed_hook" = function(pkg, version) FALSE),
+      estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2_mi)
+    ),
+    class = "cea_error_mice_not_installed"
+  )
+  expect_error(
+    withr::with_options(
+      list("rlang:::is_installed_hook" = function(pkg, version) version < 3.0),
+      estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2_mi)
+    ),
+    class = "cea_error_mice_not_installed"
+  )
 })
 
 test_that("estimate works with custom `linear_pred`", {
@@ -50,7 +64,14 @@ test_that("estimate works with list data", {
 
   expect_s3_class(fit, "cea_estimate")
   expect_s3_class(fit, "mcglm")
-  expect_equal(fit_list, fit, ignore_formula_env = TRUE)
+  expect_equal(fit_list, fit, ignore_formula_env = TRUE, ignore_attr = "call")
+})
+
+test_that("estimate works with mids data", {
+  skip_if_not_installed("mice", "3.0")
+  expect_s3_class(fit_mi, "cea_mira")
+  expect_s3_class(fit, "mcglm")
+  expect_equal(fit_mi$analyses[[1]], fit_fct, ignore_formula_env = TRUE, ignore_attr = "call")
 })
 
 test_that("estimate works with missing covars", {
@@ -74,4 +95,6 @@ test_that("print.cea_estimate works", {
   expect_snapshot_output(fit)
   with_sink(tempfile(), expect_equal(print(fit), fit))
   expect_snapshot_output(fit_fct)
+  skip_if_not_installed("mice", "3.0")
+  expect_snapshot_output(fit_mi)
 })

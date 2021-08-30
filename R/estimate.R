@@ -46,8 +46,8 @@
 #' @param covars (optional) Character vector naming variables in `data`
 #'     included as (baseline) covariates in the regression models.
 #' @param data A data frame (or object coercible by
-#'     \code{\link[base]{as.data.frame}} to a data frame) containing the
-#'     variables in the model.
+#'     \code{\link[base]{as.data.frame}} to a data frame) or a `mids` object
+#'     containing the variables in the model.
 #' @param linear_pred (optional) A list of formula specifying the different
 #'     model components to be estimated. If specified, over-rides the model
 #'     specification in `QALYs`, `costs`, and optional `covars`. See
@@ -68,15 +68,19 @@
 #'     function for Costs.
 #' @param ... Optional arguments to be passed to \code{\link[mcglm]{mcglm}}.
 #'
-#' @return If `linear_pred` is specified, an object of class `mcglm`; otherwise
-#'     an object of class `cea_estimate` inheriting from `mcglm`.
+#' @return An object of class `cea_estimate` inheriting from `mcglm`.
 #'
 #' @export
 estimate <- function(QALYs, costs, treatment, covars, data,
                      linear_pred = NULL, matrix_pred = NULL, link = NULL, variance = NULL, ...) {
+  UseMethod("estimate", data)
+}
+
+#' @export
+estimate.data.frame <- function(QALYs, costs, treatment, covars, data, linear_pred = NULL,
+                                matrix_pred = NULL, link = NULL, variance = NULL, ...) {
   cl <- match.call()
 
-  if (!is.data.frame(data)) data <- as.data.frame(data)
   if (is.null(link)) {
     if (is.null(linear_pred)) link <- c("identity", "log")
     else link <- rep("identity", length(linear_pred))
@@ -130,15 +134,48 @@ estimate <- function(QALYs, costs, treatment, covars, data,
 }
 
 #' @export
+estimate.mids <- function(QALYs, costs, treatment, covars, data, linear_pred = NULL,
+                          matrix_pred = NULL, link = NULL, variance = NULL, ...) {
+  if (!rlang::is_installed("mice", version = "3.0")) {
+    if (!rlang::is_installed("mice")) stop_mice_not_installed()
+    stop_mice_not_installed(utils::packageVersion("mice"))
+  }
+
+  cl <- match.call()
+
+  analyses <- as.list(seq_len(data$m))
+  for (i in seq_along(analyses)) {
+    data.i <- mice::complete(data, i)
+    analyses[[i]] <- estimate(QALYs, costs, treatment, covars, data.i, linear_pred, matrix_pred,
+                              link, variance, ...)
+  }
+  object <- list(call = cl, call1 = data$call, nmis = data$nmis,
+                 analyses = analyses)
+  oldClass(object) <- c("cea_mira", "mira", "matrix")
+  object
+}
+
+#' @export
+estimate.default <- function(QALYs, costs, treatment, covars, data, linear_pred = NULL,
+                             matrix_pred = NULL, link = NULL, variance = NULL, ...) {
+  cl <- match.call()
+
+  if (!is.data.frame(data)) data <- as.data.frame(data)
+  out <- estimate(QALYs, costs, treatment, covars, data, linear_pred = NULL,
+                  matrix_pred = NULL, link = NULL, variance = NULL, ...)
+  attr(out, "call") <- cl
+  out
+}
+
+#' @export
 print.cea_estimate <- function(x, ...) {
   cat("===============================================\n")
   cat("=== Cost-Effectiveness Regression Estimates ===\n")
   cat("===============================================\n\n")
 
-  cat("Call:", rlang::quo_text(attr(x, "call")), "\n\n")
+  cat("Call:\n", rlang::quo_text(attr(x, "call")), "\n\n")
 
   cat("------------------\n")
-
   cat("Univariate Models:\n\n")
   for (i in seq_along(x$linear_pred)) {
     cat("  ", names(x$linear_pred)[[i]], ": ", rlang::as_label(x$linear_pred[[i]]), "\n", sep = "")
@@ -155,6 +192,45 @@ print.cea_estimate <- function(x, ...) {
   cat("  QALYs:", sprintf("%+10.3f", QALYs(x)), "\n")
   cat("  Costs:", sprintf("%+10.0f", Costs(x)), "\n")
   cat("  ICER: ", sprintf("%10.0f", ICER(x)), "\n\n")
+
+  cat("===============================================\n")
+
+  return(invisible(x))
+}
+
+#' @export
+print.cea_mira <- function(x, ...) {
+  m = length(x$analyses)
+
+  cat("================================================================\n")
+  cat("=== Multiply-Imputed Cost-Effectiveness Regression Estimates ===\n")
+  cat("================================================================\n")
+
+  cat("Based on", m, "imputed datasets.\n\n")
+
+  cat("Call:\n", rlang::quo_text(x$call), "\n\n")
+
+  cat("Data:\n", rlang::quo_text(x$call1), "\n\n")
+
+  cat("------------------\n")
+  cat("Univariate Models:\n\n")
+  for (i in seq_along(x$analyses[[1]]$linear_pred)) {
+    cat("  ", names(x$analyses[[1]]$linear_pred)[[i]], ": ",
+        rlang::as_label(x$analyses[[1]]$linear_pred[[i]]), "\n", sep = "")
+    cat("    * Link function:", x$analyses[[1]]$link[[i]], "\n")
+    cat("    * Variance function:", x$analyses[[1]]$variance[[i]], "\n")
+    cat("    * Covariance function:", x$analyses[[1]]$covariance[[i]], "\n\n")
+  }
+
+  cat("------------------\n")
+  cat("Incremental Treatment Effects:\n")
+  cat("(From first imputed dataset; use `pool_cea()` to compute pooled estimates)\n")
+  if (is_factor_tx(x$analyses[[1]])) {
+    cat("        ", pad(extract_tx(x$analyses[[1]]), 10), "\n")
+  }
+  cat("  QALYs:", sprintf("%+10.3f", QALYs(x$analyses[[1]])), "\n")
+  cat("  Costs:", sprintf("%+10.0f", Costs(x$analyses[[1]])), "\n")
+  cat("  ICER: ", sprintf("%10.0f", ICER(x$analyses[[1]])), "\n\n")
 
   cat("===============================================\n")
 

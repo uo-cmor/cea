@@ -26,8 +26,8 @@ respectively.}
 included as (baseline) covariates in the regression models.}
 
 \item{data}{A data frame (or object coercible by
-\code{\link[base]{as.data.frame}} to a data frame) containing the
-variables in the model.}
+\code{\link[base]{as.data.frame}} to a data frame) or a \code{mids} object
+containing the variables in the model.}
 
 \item{linear_pred}{(optional) A list of formula specifying the different
 model components to be estimated. If specified, over-rides the model
@@ -54,8 +54,7 @@ function for Costs.}
 \item{...}{Optional arguments to be passed to \code{\link[mcglm]{mcglm}}.}
 }
 \value{
-If \code{linear_pred} is specified, an object of class \code{mcglm}; otherwise
-an object of class \code{cea_estimate} inheriting from \code{mcglm}.
+An object of class \code{cea_estimate} inheriting from \code{mcglm}.
 }
 \description{
 Estimate a multivariate covariance generalised linear model (\cite{Bonat &

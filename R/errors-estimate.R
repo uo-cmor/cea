@@ -35,3 +35,14 @@ stop_invalid_treatment <- function(tx, type) {
   )
   rlang::cnd_signal(rlang::error_cnd("cea_error_invalid_treatment", message = x))
 }
+
+stop_mice_not_installed <- function(version = NULL) {
+  x <- paste0(
+    "`mice` version 3.0 or greater is required for `estimate.mids()`.\n",
+    rlang::format_error_bullets(c(
+      i = if (!is.null(version)) paste("Version", version, "is currently installed."),
+      "*" = paste(if (is.null(version)) "Install" else "Update", "with `install.packages('mice')`.")
+    ))
+  )
+  rlang::cnd_signal(rlang::error_cnd("cea_error_mice_not_installed", message = x))
+}
