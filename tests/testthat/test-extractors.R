@@ -5,7 +5,7 @@ test_that("QALYs works as expected", {
 })
 
 test_that("QALYs gives appropriate error messages", {
-  expect_error(QALYs(fit_mcglm), class = "cea_error_not_cea_estimate")
+  expect_error(QALYs(fit_mcglm), class = "cea_error_incorrect_class")
 })
 
 test_that("Costs works as expected", {
@@ -18,7 +18,7 @@ test_that("Costs works as expected", {
 })
 
 test_that("Costs gives appropriate error messages", {
-  expect_error(Costs(fit_mcglm), class = "cea_error_not_cea_estimate")
+  expect_error(Costs(fit_mcglm), class = "cea_error_incorrect_class")
   expect_error(Costs(fit, "ABC"), class = "cea_error_unknown_estimand")
 })
 
@@ -27,7 +27,7 @@ test_that("ICER works as expected", {
 })
 
 test_that("ICER gives appropriate error messages", {
-  expect_error(ICER(fit_mcglm), class = "cea_error_not_cea_estimate")
+  expect_error(ICER(fit_mcglm), class = "cea_error_incorrect_class")
 })
 
 test_that("INMB works as expected", {
@@ -35,7 +35,7 @@ test_that("INMB works as expected", {
 })
 
 test_that("INMB gives appropriate error messages", {
-  expect_error(INMB(fit_mcglm, 60000), class = "cea_error_not_cea_estimate")
+  expect_error(INMB(fit_mcglm, 60000), class = "cea_error_incorrect_class")
 })
 
 test_that("INHB works as expected", {
@@ -43,7 +43,7 @@ test_that("INHB works as expected", {
 })
 
 test_that("INHB gives appropriate error messages", {
-  expect_error(INHB(fit_mcglm, 60000), class = "cea_error_not_cea_estimate")
+  expect_error(INHB(fit_mcglm, 60000), class = "cea_error_incorrect_class")
 })
 
 test_that("extract gives appropriate error messages", {

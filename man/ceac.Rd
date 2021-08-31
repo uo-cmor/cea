@@ -24,8 +24,8 @@ ceac(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs", ...)
 \method{ceac}{cea_boot}(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs", ...)
 }
 \arguments{
-\item{x}{\code{cea_estimate} object. The fitted CEA regression model. Must use
-the default 'formula' specification.}
+\item{x}{\code{cea_estimate} or \code{cea_boot} object. The fitted CEA regression
+model or bootstrap resampling from the fitted model.}
 
 \item{wtp_max}{Maximum willingness-to-pay level for calculation.}
 

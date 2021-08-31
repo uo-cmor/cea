@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate.R
 \name{estimate}
 \alias{estimate}
-\title{Estimate joint model for intervention costs and effects (QALYs)}
+\title{Estimate joint regression model for intervention costs and effects (QALYs)}
 \usage{
 estimate(
   QALYs,

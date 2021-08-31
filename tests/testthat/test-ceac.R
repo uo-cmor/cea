@@ -4,6 +4,8 @@ fit_ceac_delta <- ceac(fit, wtp_max = 100000, wtp_step = 10000, method = "delta"
 fit_ceac_boot <- ceac(boot_est, wtp_max = 100000, wtp_step = 10000)
 fit_ceac_boot_fct <- ceac(boot_est_fct, wtp_max = 100000, wtp_step = 10000)
 fit_ceac_boot_fct2 <- ceac(boot_est_fct2, wtp_max = 100000, wtp_step = 10000)
+fit_ceac_pooled <- ceac(fit_pooled, R = 9, wtp_max = 100000, wtp_step = 10000, sim = "parametric")
+fit_ceac_pooled_delta <- ceac(fit_pooled, wtp_max = 100000, wtp_step = 10000, method = "delta")
 
 test_that("ceac works with cea_estimate objects", {
   expect_s3_class(fit_ceac, "cea_ceac")
@@ -39,6 +41,32 @@ test_that("ceac works with delta method", {
   expect_equal(attr(fit_ceac_delta, "method"), "delta")
 })
 
+test_that("ceac works with pooled regression analysis", {
+  expect_s3_class(fit_ceac_pooled, "cea_ceac")
+  expect_equal(dim(fit_ceac_pooled), c(33, 3))
+  expect_equal(fit_ceac_pooled$wtp, rep(seq.int(0, 100000, 10000), 3))
+  expect_true(all(fit_ceac_pooled$ceac >= 0 & fit_ceac_pooled$ceac <= 1))
+  expect_equal(fit_ceac_pooled$tx, rep(c("ExB", "MT", "MT + ExB"), each = 11))
+  expect_equal(attr(fit_ceac_pooled, "method"), "boot")
+  expect_equal(attr(fit_ceac_pooled, "R"), 9)
+  expect_equal(attr(fit_ceac_pooled, "sim"), "parametric")
+
+  expect_s3_class(fit_ceac_pooled_delta, "cea_ceac")
+  expect_equal(dim(fit_ceac_pooled_delta), c(33, 3))
+  expect_equal(fit_ceac_pooled_delta$wtp, rep(seq.int(0, 100000, 10000), 3))
+  expect_equal(
+    fit_ceac_pooled_delta$ceac,
+    c(0.1413257, 0.3096712, 0.4835808, 0.5873104, 0.6456926, 0.6809783, 0.7040220, 0.7200541,
+      0.7317737, 0.7406794, 0.7476590, 0.1549362, 0.4753990, 0.7190983, 0.8208210, 0.8655385,
+      0.8886021, 0.9021477, 0.9108917, 0.9169393, 0.9213438, 0.9246816, 0.2541600, 0.2974421,
+      0.3578533, 0.4003587, 0.4278110, 0.4461955, 0.4591445, 0.4686810, 0.4759658, 0.4816980,
+      0.4863193),
+    tolerance = 1e-7
+  )
+  expect_equal(fit_ceac_pooled_delta$tx, rep(c("ExB", "MT", "MT + ExB"), each = 11))
+  expect_equal(attr(fit_ceac_pooled_delta, "method"), "delta")
+})
+
 test_that("ceac works with cea_boot objects", {
   expect_s3_class(fit_ceac_boot, "cea_ceac")
   expect_equal(dim(fit_ceac_boot), c(11, 2))
@@ -67,6 +95,8 @@ test_that("ceac gives appropriate errors", {
   expect_error(ceac(fit), class = "cea_error_missing_R")
   expect_error(ceac(fit, R = 9, QALYs = "X"), class = "cea_error_unknown_outcome")
   expect_error(ceac(boot_est, QALYs = "X"), class = "cea_error_unknown_outcome")
+  expect_error(ceac(fit_pooled, R = 9, wtp_max = 100000, wtp_step = 10000),
+               class = "cea_error_bootstrap_pooled")
 })
 
 test_that("autoplot.cea_ceac works as expected", {

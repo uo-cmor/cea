@@ -1,4 +1,4 @@
-#' Confidence Intervals for CEA Estimates
+#' Confidence intervals for CEA estimates
 #'
 #' Generate confidence intervals for mean incremental QALYs, costs, net
 #'     monetary benefit (INMB), and net health benefit (INHB) from a fitted CEA

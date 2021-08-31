@@ -1,4 +1,4 @@
-#' Estimate joint model for intervention costs and effects (QALYs)
+#' Estimate joint regression model for intervention costs and effects (QALYs)
 #'
 #' Estimate a multivariate covariance generalised linear model (\cite{Bonat &
 #'     Jørgensen 2016}) for the joint incremental costs and QALYs from a
@@ -201,6 +201,7 @@ print.cea_estimate <- function(x, ...) {
 #' @export
 print.cea_mira <- function(x, ...) {
   m = length(x$analyses)
+  x1 <- x$analyses[[1]]
 
   cat("================================================================\n")
   cat("=== Multiply-Imputed Cost-Effectiveness Regression Estimates ===\n")
@@ -214,23 +215,21 @@ print.cea_mira <- function(x, ...) {
 
   cat("------------------\n")
   cat("Univariate Models:\n\n")
-  for (i in seq_along(x$analyses[[1]]$linear_pred)) {
-    cat("  ", names(x$analyses[[1]]$linear_pred)[[i]], ": ",
-        rlang::as_label(x$analyses[[1]]$linear_pred[[i]]), "\n", sep = "")
-    cat("    * Link function:", x$analyses[[1]]$link[[i]], "\n")
-    cat("    * Variance function:", x$analyses[[1]]$variance[[i]], "\n")
-    cat("    * Covariance function:", x$analyses[[1]]$covariance[[i]], "\n\n")
+  for (i in seq_along(x1$linear_pred)) {
+    cat("  ", names(x1$linear_pred)[[i]], ": ",
+        rlang::as_label(x1$linear_pred[[i]]), "\n", sep = "")
+    cat("    * Link function:", x1$link[[i]], "\n")
+    cat("    * Variance function:", x1$variance[[i]], "\n")
+    cat("    * Covariance function:", x1$covariance[[i]], "\n\n")
   }
 
   cat("------------------\n")
   cat("Incremental Treatment Effects:\n")
   cat("(From first imputed dataset; use `pool_cea()` to compute pooled estimates)\n")
-  if (is_factor_tx(x$analyses[[1]])) {
-    cat("        ", pad(extract_tx(x$analyses[[1]]), 10), "\n")
-  }
-  cat("  QALYs:", sprintf("%+10.3f", QALYs(x$analyses[[1]])), "\n")
-  cat("  Costs:", sprintf("%+10.0f", Costs(x$analyses[[1]])), "\n")
-  cat("  ICER: ", sprintf("%10.0f", ICER(x$analyses[[1]])), "\n\n")
+  if (is_factor_tx(x1)) cat("        ", pad(extract_tx(x1), 10), "\n")
+  cat("  QALYs:", sprintf("%+10.3f", QALYs(x1)), "\n")
+  cat("  Costs:", sprintf("%+10.0f", Costs(x1)), "\n")
+  cat("  ICER: ", sprintf("%10.0f", ICER(x1)), "\n\n")
 
   cat("===============================================\n")
 

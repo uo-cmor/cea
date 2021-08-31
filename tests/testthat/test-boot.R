@@ -2,6 +2,8 @@ t0 <- c(QALYs = QALYs(fit), Costs = Costs(fit))
 
 t0_fct <- cbind(QALYs = QALYs(fit_fct), Costs = Costs(fit_fct))
 
+t0_pooled <- cbind(QALYs = QALYs(fit_pooled), Costs = Costs(fit_pooled))
+
 test_that("boot works as expected", {
   expect_s3_class(boot_est, "cea_boot")
   expect_equal(boot_est$t0, t0)
@@ -30,10 +32,20 @@ test_that("boot works with factor treatment variable", {
   expect_equal(attr(boot_est_fct2, "tx"), c("Ex", "MT", "MT + ExB"))
 })
 
+test_that("boot works with pooled regression analysis", {
+  expect_s3_class(boot_pooled, "cea_boot")
+  expect_equal(boot_pooled$t0, t0_pooled)
+  expect_equal(dim(boot_pooled$t), c(9, 6))
+  expect_equal(boot_pooled$R, 9)
+  expect_equal(boot_pooled$sim, "parametric")
+  expect_equal(attr(boot_pooled, "tx"), c("ExB", "MT", "MT + ExB"))
+})
+
 test_that("boot gives appropriate error messages", {
-  expect_error(boot(fit_mcglm, R = 9), class = "cea_error_not_cea_estimate")
+  expect_error(boot(fit_mcglm, R = 9), class = "cea_error_incorrect_class")
   expect_error(boot(fit, sim = "antithetic"), class = "cea_error_unknown_sim")
   expect_error(boot(fit, sim = "abc"), class = "cea_error_unknown_sim")
+  expect_error(boot(fit_pooled), class = "cea_error_bootstrap_pooled")
 })
 
 test_that("autoplot.cea_boot works as expected", {

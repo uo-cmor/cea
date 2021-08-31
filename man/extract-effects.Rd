@@ -7,7 +7,7 @@
 \alias{ICER}
 \alias{INMB}
 \alias{INHB}
-\title{Incremental Treatment EFfects}
+\title{Incremental treatment eFfects}
 \usage{
 QALYs(x, estimand = "ATE")
 

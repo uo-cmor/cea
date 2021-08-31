@@ -8,6 +8,12 @@ suppressWarnings({
                          method = "delta")
   fit_ci_fct_delta2 <- ci(fit_fct2, c("QALYs", "Costs", "INMB"), conf = 0.8, wtp = 60000,
                           method = "delta")
+  fit_ci_pooled <- suppressWarnings(
+    ci(fit_pooled, c("QALYs", "Costs", "INMB"), conf = 0.8, wtp = 60000,
+       sim = "parametric", R = 9, type = "perc")
+  )
+  fit_ci_pooled_delta <- ci(fit_pooled, c("QALYs", "Costs", "INMB"), conf = 0.8, wtp = 60000,
+                            method = "delta")
 })
 
 test_that("ci works with cea_estimate objects", {
@@ -50,6 +56,29 @@ test_that("ci works with factor treatments", {
   expect_equal(fit_ci_fct_delta$QALYs[1, ], -fit_ci_fct_delta2$QALYs[1, 2:1], ignore_attr = TRUE)
 })
 
+test_that("ci works with pooled regression analysis", {
+  expect_s3_class(fit_ci_pooled, "cea_ci")
+  expect_length(fit_ci_pooled, 3)
+  expect_equal(dim(fit_ci_pooled[[1]]), c(3, 2))
+  expect_true(all(fit_ci_pooled[[1]][, 1] < fit_ci_pooled[[1]][, 2]))
+  expect_true(all(fit_ci_pooled[[2]][, 1] < fit_ci_pooled[[2]][, 2]))
+  expect_true(all(fit_ci_pooled[[3]][, 1] < fit_ci_pooled[[3]][, 2]))
+  expect_equal(attr(fit_ci_pooled, "conf"), 0.8)
+  expect_equal(attr(fit_ci_pooled, "method"), "boot")
+  expect_equal(attr(fit_ci_pooled, "sim"), "parametric")
+  expect_equal(attr(fit_ci_pooled, "type"), "perc")
+  expect_equal(attr(fit_ci_pooled, "R"), 9)
+
+  expect_s3_class(fit_ci_pooled_delta, "cea_ci")
+  expect_length(fit_ci_pooled_delta, 3)
+  expect_equal(dim(fit_ci_pooled_delta[[1]]), c(3, 2))
+  expect_true(all(fit_ci_pooled_delta[[1]][, 1] < fit_ci_pooled_delta[[1]][, 2]))
+  expect_true(all(fit_ci_pooled_delta[[2]][, 1] < fit_ci_pooled_delta[[2]][, 2]))
+  expect_true(all(fit_ci_pooled_delta[[3]][, 1] < fit_ci_pooled_delta[[3]][, 2]))
+  expect_equal(attr(fit_ci_pooled_delta, "conf"), 0.8)
+  expect_equal(attr(fit_ci_pooled_delta, "method"), "delta")
+})
+
 test_that("ci works with cea_boot objects", {
   expect_s3_class(fit_ci_boot, "cea_ci")
   expect_length(fit_ci_boot, 3)
@@ -82,6 +111,11 @@ test_that("ci gives appropriate error messages", {
   expect_error(ci(boot_est, wtp = 60000, type = "all"), class = "cea_error_invalid_ci_type")
   expect_error(ci(boot_est, wtp = 60000), class = "cea_error_R_too_small")
   expect_error(ci(boot_est_par, wtp = 60000), class = "cea_error_invalid_bca_parametric")
+
+  expect_error(
+    ci(fit_pooled, c("QALYs", "Costs", "INMB"), conf = 0.8, wtp = 60000, R = 9, type = "perc"),
+    class = "cea_error_bootstrap_pooled"
+  )
 })
 
 test_that("print.cea_ci works", {

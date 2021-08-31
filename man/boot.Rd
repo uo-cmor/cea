@@ -2,7 +2,7 @@
 % Please edit documentation in R/boot.R
 \name{boot}
 \alias{boot}
-\title{Bootstrap Resampling of CEA Estimates}
+\title{Bootstrap resampling of CEA estimates}
 \usage{
 boot(
   x,

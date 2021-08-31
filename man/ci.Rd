@@ -4,7 +4,7 @@
 \alias{ci}
 \alias{ci.cea_estimate}
 \alias{ci.cea_boot}
-\title{Confidence Intervals for CEA Estimates}
+\title{Confidence intervals for CEA estimates}
 \usage{
 ci(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE", ...)
 

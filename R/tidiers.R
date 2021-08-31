@@ -37,3 +37,63 @@ tidy.cea_estimate <- function(x, ...) {
   colnames(out) <- cols
   out
 }
+
+#' @export
+tidy.cea_pooled <- function(x, ...) {
+  vars <- names(x$beta_names)
+  nvars <- length(vars)
+  n_beta <- unlist(x$Information$n_betas)
+  n_rho <- x$Information$n_rho
+  n_tau <- unlist(x$Information$n_taus)
+
+  idxs_beta <- split(seq_along(x$Regression), rep(seq_along(n_beta), n_beta))
+  idxs_rho <- seq_len(n_rho) + sum(n_beta)
+  idxs_tau <- split(seq_along(x$Covariance[-seq_along(idxs_rho)]) + n_rho + sum(n_beta),
+                    rep(seq_along(n_tau), n_tau))
+
+  coefs <- coef(x)
+  vcov <- vcov(x)
+
+  extract_tidy_beta <- function(idx, term, lab) {
+    tibble::tibble(component = "regression",
+                   y.level = lab,
+                   term = term,
+                   estimate = coefs[idx],
+                   std.error = sqrt(vcov[cbind(idx, idx)]),
+                   statistic = .data$estimate / .data$std.error,
+                   p.value = 2 * stats::pnorm(abs(.data$statistic), lower.tail = FALSE))
+  }
+  extract_tidy_rho <- function(idx) {
+    tibble::tibble(
+      component = "correlation",
+      y.level = NA_character_,
+      term = paste0("rho",
+                    rep(seq_len(nvars - 1), rev(seq_len(nvars - 1))),
+                    sequence(rev(seq_len(nvars - 1)), seq_len(nvars)[-1])),
+      estimate = coefs[idx],
+      std.error = sqrt(vcov[cbind(idx, idx)]),
+      statistic = .data$estimate / .data$std.error,
+      p.value = 2 * stats::pnorm(abs(.data$statistic), lower.tail = FALSE)
+    )
+  }
+  extract_tidy_tau <- function(idx, i, lab) {
+    tibble::tibble(component = "dispersion",
+                   y.level = lab,
+                   term = paste0("tau", i, seq_along(idx)),
+                   estimate = coefs[idx],
+                   std.error = sqrt(vcov[idx, idx]),
+                   statistic = .data$estimate / .data$std.error,
+                   p.value = 2 * stats::pnorm(abs(.data$statistic), lower.tail = FALSE))
+  }
+
+  reg <- lapply(seq_along(vars),
+                function(i) extract_tidy_beta(idxs_beta[[i]], x$beta_names[[i]], vars[[i]]))
+  rho <- extract_tidy_rho(idxs_rho)
+  tau <- lapply(seq_along(vars),
+                function(i) extract_tidy_tau(idxs_tau[[i]], i, vars[[i]]))
+
+  reg <- rlang::exec(rbind, !!!reg)
+  tau <- rlang::exec(rbind, !!!tau)
+
+  rbind(reg, rho, tau)
+}

@@ -1,5 +1,10 @@
 # cea 0.0.0.9000
 
+* Added `pool_cea()` and associated `print()`, `coef()`, `vcov()` and `tidy()`
+  methods to pool multiple-imputation regression results.
+
+* Added `mids` method for `estimate()`
+
 * Added `CEAC()` to calculate cost-effectiveness acceptability curve from
   regression model.
 

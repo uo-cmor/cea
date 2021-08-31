@@ -1,4 +1,4 @@
-#' Bootstrap Resampling of CEA Estimates
+#' Bootstrap resampling of CEA estimates
 #'
 #' Generate R bootstrap replicates of mean incremental QALYs and Costs from a
 #'     fitted CEA regression model, using the `boot` package.
@@ -21,7 +21,7 @@
 boot <- function(x, R, estimand = "ATE", sim = "ordinary", weights = NULL,
                  simple = FALSE, parallel = c("no", "multicore", "snow"),
                  ncpus = getOption("cea.boot.ncpus", 1L), cl = NULL) {
-  if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
+  if (!inherits(x, "cea_estimate")) stop_incorrect_class("cea_estimate")
   if (!rlang::is_string(sim, c("ordinary", "parametric", "balanced", "permutation")))
     stop_unknown_sim(sim)
   if (missing(parallel)) parallel <- getOption("cea.boot.parallel", "no")
@@ -43,6 +43,7 @@ boot <- function(x, R, estimand = "ATE", sim = "ordinary", weights = NULL,
       simple = !!simple, parallel = !!parallel, ncpus = !!ncpus, cl = !!cl
     )))
   } else {
+    if (inherits(x, "cea_pooled")) stop_bootstrap_pooled()
     est_fun <- function(idxs, i) {
       call. <- attr(x, "call")
       call.$data <- x$data[i, ]
@@ -69,7 +70,7 @@ autoplot.cea_boot <- function(object, wtp = NULL, QALYs = "QALYs", Costs = "Cost
 
   if (mult_tx) dim(object$t) <- c(object$R * nrow(object$t0), ncol(object$t0))
   plotdata <- tibble::as_tibble(object$t, .name_repair = ~nm)
-  if (mult_tx) plotdata$.tx <- factor(rep(rownames(object$t0), object$R))
+  if (mult_tx) plotdata$.tx <- factor(rep(rownames(object$t0), each = object$R))
 
 
   out <- if (mult_tx) {
@@ -82,7 +83,8 @@ autoplot.cea_boot <- function(object, wtp = NULL, QALYs = "QALYs", Costs = "Cost
 
   if (!is.null(wtp)) out <- out + ggplot2::geom_abline(slope = wtp, colour = "red", alpha = 0.5)
 
-  out <- out + ggplot2::geom_point()
+  if (mult_tx && object$R >= 1000) out <- out + ggplot2::geom_point(alpha = 0.3)
+  else out <- out + ggplot2::geom_point()
 
   if (!mult_tx) out <- out +
     ggplot2::geom_point(ggplot2::aes(object$t0[[!!QALYs]], object$t0[[!!Costs]]),

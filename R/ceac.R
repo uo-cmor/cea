@@ -2,8 +2,9 @@
 #'
 #' Generate a cost-effectiveness acceptability curve (CEAC) from a fitted CEA
 #'      regression model.
-#' @param x `cea_estimate` object. The fitted CEA regression model. Must use
-#'     the default 'formula' specification.
+#'
+#' @param x `cea_estimate` or `cea_boot` object. The fitted CEA regression
+#'     model or bootstrap resampling from the fitted model.
 #' @param wtp_max Maximum willingness-to-pay level for calculation.
 #' @param wtp_step Interval between calculated willingness-to-pay levels.
 #' @param QALYs,Costs Names of the variables in `x` representing QALYs and

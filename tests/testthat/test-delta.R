@@ -27,7 +27,7 @@ test_that("extract_dmu works as expected", {
 })
 
 test_that("extract_dmu gives appropriate errors", {
-  expect_error(extract_dmu(fit_mcglm), class = "cea_error_not_cea_estimate")
+  expect_error(extract_dmu(fit_mcglm), class = "cea_error_incorrect_class")
   expect_error(extract_dmu(fit, "X"), class = "cea_error_unknown_outcome")
   expect_error(extract_dmu(fit, "QALYs", "ABC"), class = "cea_error_unknown_estimand")
   attr(fit, "tx") <- "X"

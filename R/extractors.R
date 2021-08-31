@@ -1,4 +1,4 @@
-#' Incremental Treatment EFfects
+#' Incremental treatment eFfects
 #'
 #' Extract incremental treatment effects from a fitted `cea_estimate`
 #'     regression object.
@@ -46,7 +46,7 @@ INHB <- function(x, wtp, estimand = "ATE") {
 }
 
 extract <- function(x, outcome, estimand = "ATE") {
-  if (!inherits(x, "cea_estimate")) stop_not_cea_estimate()
+  if (!inherits(x, "cea_estimate")) stop_incorrect_class("cea_estimate")
   if (length(idx <- which(names(x$linear_pred) == outcome)) == 0) stop_unknown_outcome(outcome)
   tx <- attr(x, "tx")
   if (is.null(x$data[[tx]])) stop_unknown_treatment(tx)
