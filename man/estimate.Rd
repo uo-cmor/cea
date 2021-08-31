@@ -10,10 +10,12 @@ estimate(
   treatment,
   covars,
   data,
+  cluster = NULL,
   linear_pred = NULL,
   matrix_pred = NULL,
   link = NULL,
   variance = NULL,
+  control_algorithm = list(),
   ...
 )
 }
@@ -29,6 +31,9 @@ included as (baseline) covariates in the regression models.}
 \code{\link[base]{as.data.frame}} to a data frame) or a \code{mids} object
 containing the variables in the model.}
 
+\item{cluster}{(optional) Character vector naming variables in \code{data}
+signifying cluster membership.}
+
 \item{linear_pred}{(optional) A list of formula specifying the different
 model components to be estimated. If specified, over-rides the model
 specification in \code{QALYs}, \code{costs}, and optional \code{covars}. See
@@ -36,9 +41,11 @@ specification in \code{QALYs}, \code{costs}, and optional \code{covars}. See
 passed to \code{mcglm} unchanged).}
 
 \item{matrix_pred}{(optional) A list of matrices to be used on the matrix
-linear predictor. See \code{\link[mcglm]{mcglm}} for details (if
-provided, this argument is passed to \code{mcglm} unchanged). If not
-specified, the default is to use an identity matrix for both components.}
+linear predictor. If not specified, the default is to use an identity
+matrix for both components, with random effects on any variables
+specified in \code{cluster}. If specified, over-rides the cluster
+specification in \code{cluster}. See \code{\link[mcglm]{mcglm}} for details
+(if provided, this argument is passed to \code{mcglm} unchanged).}
 
 \item{link}{(optional) A list of link function names. See
 \code{\link[mcglm]{mcglm}} for details (if provided, this argument is
@@ -51,7 +58,12 @@ passed to \code{mcglm} unchanged). If not specified, the default is to use a
 "constant" variance function for QALYs and a "tweedie" variation
 function for Costs.}
 
-\item{...}{Optional arguments to be passed to \code{\link[mcglm]{mcglm}}.}
+\item{control_algorithm}{A list of arguments to be passed for the fitting
+algorithm. See \code{\link[mcglm]{mcglm}} and
+\code{\link[mcglm]{fit_mcglm}} for details.}
+
+\item{...}{Further optional arguments to be passed to
+\code{\link[mcglm]{mcglm}}.}
 }
 \value{
 An object of class \code{cea_estimate} inheriting from \code{mcglm}.

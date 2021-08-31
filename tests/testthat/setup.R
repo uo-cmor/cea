@@ -25,6 +25,17 @@ fit_lp <- estimate(
   data = moa2_ex
 )
 
+fit_cluster <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_cluster,
+                        cluster = "cluster", control_algorithm = list(max_iter = 50))
+fit_mp <- estimate(
+  "QALYs", "Cost", "booster", c("age", "sex"), data = moa2_cluster,
+  control_algorithm = list(max_iter = 50),
+  matrix_pred = rep(
+    list(c(mcglm::mc_id(moa2_cluster), mcglm::mc_mixed(~0 + cluster, moa2_cluster))),
+    2
+  )
+)
+
 boot_est <- boot(fit, R = 9)
 boot_est_par <- boot(fit, R = 9, sim = "parametric")
 boot_est_fct <- boot(fit_fct, R = 9, sim = "parametric")

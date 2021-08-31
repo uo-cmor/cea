@@ -50,6 +50,17 @@ test_that("estimate gives appropriate messages", {
     ),
     class = "cea_error_mice_not_installed"
   )
+  expect_warning(
+    estimate(
+      "QALYs", "Cost", "booster", c("age", "sex"), data = moa2_cluster, cluster = "cluster",
+      control_algorithm = list(max_iter = 50),
+      matrix_pred = rep(
+        list(c(mcglm::mc_id(moa2_cluster), mcglm::mc_mixed(~0 + cluster, moa2_cluster))),
+        2
+      )
+    ),
+    class = "cea_warning_cluster_override"
+  )
 })
 
 test_that("estimate works with custom `linear_pred`", {
@@ -62,8 +73,8 @@ test_that("estimate works with list data", {
   moa2_ex <- as.list(moa2_ex)
   fit_list <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_ex)
 
-  expect_s3_class(fit, "cea_estimate")
-  expect_s3_class(fit, "mcglm")
+  expect_s3_class(fit_list, "cea_estimate")
+  expect_s3_class(fit_list, "mcglm")
   expect_equal(fit_list, fit, ignore_formula_env = TRUE, ignore_attr = "call")
 })
 
@@ -89,6 +100,15 @@ test_that("estimate works with missing covars", {
   expect_s3_class(fit, "cea_estimate")
   expect_s3_class(fit, "mcglm")
   expect_equal(fit, fit2, ignore_attr = c("class", "tx", "call"), ignore_formula_env = TRUE)
+})
+
+test_that("estimate works with clustered data", {
+  expect_s3_class(fit_cluster, "cea_estimate")
+  expect_length(fit_cluster$matrix_pred, 2)
+  expect_length(fit_cluster$matrix_pred[[1]], 2)
+  expect_length(fit_cluster$Covariance, 5)
+
+  expect_equal(fit_cluster, fit_mp, ignore_attr ="call", ignore_formula_env = TRUE)
 })
 
 test_that("print.cea_estimate works", {

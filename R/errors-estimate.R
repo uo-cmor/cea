@@ -1,14 +1,11 @@
-warn_formula_override <- function(lhs) {
-  x <- paste0(
-    "`linear_pred` specification used in place of `formula`.\n",
-    rlang::format_error_bullets(c(
-      i = paste("Returned object will have class `mcglm` and will not work",
-                "with other `cea`-package functions"),
-      i = paste("Provide only one of `linear_pred` or `formula` to create",
-                "`cea_estimate` objects.")
-    ))
-  )
+warn_formula_override <- function() {
+  x <- "`linear_pred` specification overriding `QALYs`, `costs`, and `covars`."
   rlang::cnd_signal(rlang::warning_cnd("cea_warning_formula_override", message = x))
+}
+
+warn_cluster_override <- function() {
+  x <- "`matrix_pred` specification overriding `cluster`."
+  rlang::cnd_signal(rlang::warning_cnd("cea_warning_cluster_override", message = x))
 }
 
 stop_not_string <- function(var) {
