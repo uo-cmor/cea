@@ -52,14 +52,61 @@ test_that("estimate gives appropriate messages", {
   )
   expect_warning(
     estimate(
-      "QALYs", "Cost", "booster", c("age", "sex"), data = moa2_cluster, cluster = "cluster",
+      "QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, cluster = "centre",
       control_algorithm = list(max_iter = 50),
       matrix_pred = rep(
-        list(c(mcglm::mc_id(moa2_cluster), mcglm::mc_mixed(~0 + cluster, moa2_cluster))),
+        list(c(mcglm::mc_id(moa2_centre), mcglm::mc_mixed(~0 + centre, moa2_centre))),
         2
       )
     ),
     class = "cea_warning_cluster_override"
+  )
+  expect_warning(
+    estimate(
+      "QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = "centre",
+      control_algorithm = list(max_iter = 50),
+      matrix_pred = rep(
+        list(c(mcglm::mc_id(moa2_centre), mcglm::mc_mixed(~0 + centre, moa2_centre))),
+        2
+      )
+    ),
+    class = "cea_warning_cluster_override"
+  )
+  expect_error(
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = "centre",
+             cluster = "cluster", control_algorithm = list(max_iter = 50)),
+    class = "cea_error_cluster_centre"
+  )
+  expect_error(
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = 1,
+             control_algorithm = list(max_iter = 50)),
+    class = "cea_error_not_string"
+  )
+  expect_error(
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = "cluster",
+             control_algorithm = list(max_iter = 50)),
+    class = "cea_error_variable_not_found"
+  )
+  expect_error(
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, cluster = 1,
+             control_algorithm = list(max_iter = 50)),
+    class = "cea_error_not_string"
+  )
+  expect_error(
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, cluster = "cluster",
+             control_algorithm = list(max_iter = 50)),
+    class = "cea_error_variable_not_found"
+  )
+  moa2_centre$centre <- as.integer(moa2_centre$centre)
+  expect_warning(
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = "centre",
+             control_algorithm = list(max_iter = 50)),
+    class = "cea_warning_not_factor"
+  )
+  expect_warning(
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, cluster = "centre",
+             control_algorithm = list(max_iter = 50)),
+    class = "cea_warning_not_factor"
   )
 })
 
@@ -107,8 +154,13 @@ test_that("estimate works with clustered data", {
   expect_length(fit_cluster$matrix_pred, 2)
   expect_length(fit_cluster$matrix_pred[[1]], 2)
   expect_length(fit_cluster$Covariance, 5)
+  expect_equal(attr(fit_cluster, "cluster"), "centre")
 
-  expect_equal(fit_cluster, fit_mp, ignore_attr ="call", ignore_formula_env = TRUE)
+  expect_equal(fit_cluster, fit_centre, ignore_attr = c("call", "cluster", "centre"),
+               ignore_formula_env = TRUE)
+  expect_equal(attr(fit_centre, "centre"), "centre")
+
+  expect_equal(fit_cluster, fit_mp, ignore_attr = c("call", "cluster"), ignore_formula_env = TRUE)
 })
 
 test_that("print.cea_estimate works", {

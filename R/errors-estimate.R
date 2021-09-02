@@ -3,9 +3,24 @@ warn_formula_override <- function() {
   rlang::cnd_signal(rlang::warning_cnd("cea_warning_formula_override", message = x))
 }
 
-warn_cluster_override <- function() {
-  x <- "`matrix_pred` specification overriding `cluster`."
+warn_cluster_override <- function(variable) {
+  x <- paste0("`matrix_pred` specification overriding `", variable, "`.")
   rlang::cnd_signal(rlang::warning_cnd("cea_warning_cluster_override", message = x))
+}
+
+warn_not_factor <- function(variable, cluster) {
+  x <- paste0(
+    "Coercing the ", variable, " variable `", cluster, "` to a factor.\n",
+    rlang::format_error_bullets(c(
+      i = paste0("Specify a factor variable as `", variable, "` to silence this message.")
+    ))
+  )
+  rlang::cnd_signal(rlang::warning_cnd("cea_warning_not_factor", message = x))
+}
+
+stop_cluster_centre <- function() {
+  x <- paste0("Only one of `centre` or `cluster` should be specified.")
+  rlang::cnd_signal(rlang::error_cnd("cea_error_cluster_centre", message = x))
 }
 
 stop_not_string <- function(var) {

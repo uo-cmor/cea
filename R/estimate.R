@@ -48,8 +48,13 @@
 #' @param data A data frame (or object coercible by
 #'     \code{\link[base]{as.data.frame}} to a data frame) or a `mids` object
 #'     containing the variables in the model.
-#' @param cluster (optional) Character vector naming variables in `data`
-#'     signifying cluster membership.
+#' @param centre (optional) Character string naming a variable in `data`
+#'     signifying centre membership in a multicentre trial.
+#' @param cluster (optional) Character vector naming a variable in `data`
+#'     signifying cluster membership in a cluster-randomised trial. NOTE: At
+#'     present, `centre` and `cluster` do exactly the same thing (estimate a
+#'     mixed-effects model with centre/cluster random effects), and only one of
+#'     these arguments should be specified.
 #' @param linear_pred (optional) A list of formula specifying the different
 #'     model components to be estimated. If specified, over-rides the model
 #'     specification in `QALYs`, `costs`, and optional `covars`. See
@@ -79,15 +84,15 @@
 #' @return An object of class `cea_estimate` inheriting from `mcglm`.
 #'
 #' @export
-estimate <- function(QALYs, costs, treatment, covars, data, cluster = NULL, linear_pred = NULL,
-                     matrix_pred = NULL, link = NULL, variance = NULL, control_algorithm = list(),
-                     ...) {
+estimate <- function(QALYs, costs, treatment, covars, data, centre = NULL, cluster = NULL,
+                     linear_pred = NULL, matrix_pred = NULL, link = NULL, variance = NULL,
+                     control_algorithm = list(), ...) {
   UseMethod("estimate", data)
 }
 
 #' @export
-estimate.data.frame <- function(QALYs, costs, treatment, covars, data, cluster = NULL,
-                                linear_pred = NULL, matrix_pred = NULL, link = NULL,
+estimate.data.frame <- function(QALYs, costs, treatment, covars, data, centre = NULL,
+                                cluster = NULL, linear_pred = NULL, matrix_pred = NULL, link = NULL,
                                 variance = NULL, control_algorithm = list(), ...) {
   cl <- match.call()
 
@@ -130,12 +135,29 @@ estimate.data.frame <- function(QALYs, costs, treatment, covars, data, cluster =
   if (is.null(matrix_pred)) {
     Z <- mcglm::mc_id(data)
     if (!is.null(cluster)) {
+      if (!is.null(centre)) stop_cluster_centre()
+      if (!rlang::is_string(cluster)) stop_not_string("cluster")
+      if (!(cluster %in% names(data))) stop_variable_not_found(cluster, "data")
+      if (!is.factor(data[[cluster]])) {
+        warn_not_factor("cluster", cluster)
+        data[[cluster]] <- as.factor(data[[cluster]])
+      }
       form_cluster <- stats::reformulate(cluster, intercept = FALSE)
       Z <- c(Z, mcglm::mc_mixed(form_cluster, data))
+    } else if (!is.null(centre)) {
+      if (!rlang::is_string(centre)) stop_not_string("centre")
+      if (!(centre %in% names(data))) stop_variable_not_found(centre, "data")
+      if (!is.factor(data[[centre]])) {
+        warn_not_factor("centre", centre)
+        data[[centre]] <- as.factor(data[[centre]])
+      }
+      form_centre <- stats::reformulate(centre, intercept = FALSE)
+      Z <- c(Z, mcglm::mc_mixed(form_centre, data))
     }
     matrix_pred <- rep(list(Z), n_outcome)
   } else {
-    if (!is.null(cluster)) warn_cluster_override()
+    if (!is.null(cluster)) warn_cluster_override("cluster")
+    if (!is.null(centre)) warn_cluster_override("centre")
   }
 
   out <- with_sink(
@@ -147,12 +169,14 @@ estimate.data.frame <- function(QALYs, costs, treatment, covars, data, cluster =
   class(out) <- c("cea_estimate", class(out))
   attr(out, "call") <- cl
   attr(out, "tx") <- treatment
+  attr(out, "centre") <- centre
+  attr(out, "cluster") <- cluster
   out
 }
 
 #' @export
-estimate.mids <- function(QALYs, costs, treatment, covars, data, cluster = NULL, linear_pred = NULL,
-                          matrix_pred = NULL, link = NULL, variance = NULL,
+estimate.mids <- function(QALYs, costs, treatment, covars, data, centre = NULL, cluster = NULL,
+                          linear_pred = NULL, matrix_pred = NULL, link = NULL, variance = NULL,
                           control_algorithm = list(), ...) {
   if (!rlang::is_installed("mice", version = "3.0")) {
     if (!rlang::is_installed("mice")) stop_mice_not_installed()
@@ -164,9 +188,10 @@ estimate.mids <- function(QALYs, costs, treatment, covars, data, cluster = NULL,
   analyses <- as.list(seq_len(data$m))
   for (i in seq_along(analyses)) {
     data.i <- mice::complete(data, i)
-    analyses[[i]] <- estimate(QALYs, costs, treatment, covars, data.i, cluster = cluster,
-                              linear_pred = linear_pred, matrix_pred = matrix_pred, link = link,
-                              variance = variance, control_algorithm = control_algorithm, ...)
+    analyses[[i]] <- estimate(QALYs, costs, treatment, covars, data.i, centre = centre,
+                              cluster = cluster, linear_pred = linear_pred,
+                              matrix_pred = matrix_pred, link = link, variance = variance,
+                              control_algorithm = control_algorithm, ...)
   }
   object <- list(call = cl, call1 = data$call, nmis = data$nmis,
                  analyses = analyses)
@@ -175,13 +200,13 @@ estimate.mids <- function(QALYs, costs, treatment, covars, data, cluster = NULL,
 }
 
 #' @export
-estimate.default <- function(QALYs, costs, treatment, covars, data, cluster = NULL,
+estimate.default <- function(QALYs, costs, treatment, covars, data, centre = NULL, cluster = NULL,
                              linear_pred = NULL, matrix_pred = NULL, link = NULL, variance = NULL,
                              control_algorithm = list(), ...) {
   cl <- match.call()
 
   if (!is.data.frame(data)) data <- as.data.frame(data)
-  out <- estimate(QALYs, costs, treatment, covars, data, cluster = cluster,
+  out <- estimate(QALYs, costs, treatment, covars, data, centre = centre, cluster = cluster,
                   linear_pred = linear_pred, matrix_pred = matrix_pred, link = link,
                   variance = variance, control_algorithm = control_algorithm, ...)
   attr(out, "call") <- cl

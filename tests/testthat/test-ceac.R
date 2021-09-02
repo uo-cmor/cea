@@ -1,11 +1,16 @@
-fit_ceac <- ceac(fit, R = 9, wtp_max = 100000, wtp_step = 10000)
-fit_ceac_fct <- ceac(fit_fct, R = 9, wtp_max = 100000, wtp_step = 10000)
+fit_ceac <- ceac(fit, R = 9, wtp_max = 100000, wtp_step = 10000, method = "boot", sim = "ordinary")
+fit_ceac_fct <- ceac(fit_fct, R = 9, wtp_max = 100000, wtp_step = 10000, method = "boot",
+                     sim = "ordinary")
 fit_ceac_delta <- ceac(fit, wtp_max = 100000, wtp_step = 10000, method = "delta")
 fit_ceac_boot <- ceac(boot_est, wtp_max = 100000, wtp_step = 10000)
 fit_ceac_boot_fct <- ceac(boot_est_fct, wtp_max = 100000, wtp_step = 10000)
 fit_ceac_boot_fct2 <- ceac(boot_est_fct2, wtp_max = 100000, wtp_step = 10000)
-fit_ceac_pooled <- ceac(fit_pooled, R = 9, wtp_max = 100000, wtp_step = 10000, sim = "parametric")
+fit_ceac_pooled <- ceac(fit_pooled, R = 9, wtp_max = 100000, wtp_step = 10000, method = "boot",
+                        sim = "parametric")
 fit_ceac_pooled_delta <- ceac(fit_pooled, wtp_max = 100000, wtp_step = 10000, method = "delta")
+fit_ceac_cluster <- ceac(fit_cluster, R = 9, wtp_max = 100000, wtp_step = 10000, method = "boot",
+                         sim = "parametric")
+fit_ceac_cluster_delta <- ceac(fit_cluster, wtp_max = 100000, wtp_step = 10000, method = "delta")
 
 test_that("ceac works with cea_estimate objects", {
   expect_s3_class(fit_ceac, "cea_ceac")
@@ -67,6 +72,27 @@ test_that("ceac works with pooled regression analysis", {
   expect_equal(attr(fit_ceac_pooled_delta, "method"), "delta")
 })
 
+test_that("ceac works with clustered regression analysis", {
+  expect_s3_class(fit_ceac_cluster, "cea_ceac")
+  expect_equal(dim(fit_ceac_cluster), c(11, 2))
+  expect_equal(fit_ceac_cluster$wtp, seq.int(0, 100000, 10000))
+  expect_true(all(fit_ceac_cluster$ceac >= 0 & fit_ceac_cluster$ceac <= 1))
+  expect_equal(attr(fit_ceac_cluster, "method"), "boot")
+  expect_equal(attr(fit_ceac_cluster, "R"), 9)
+  expect_equal(attr(fit_ceac_cluster, "sim"), "parametric")
+
+  expect_s3_class(fit_ceac_cluster_delta, "cea_ceac")
+  expect_equal(dim(fit_ceac_cluster_delta), c(11, 2))
+  expect_equal(fit_ceac_cluster_delta$wtp, seq.int(0, 100000, 10000))
+  expect_equal(
+    fit_ceac_cluster_delta$ceac,
+    c(0.09886083, 0.23158456, 0.39376099, 0.50665341, 0.57634974, 0.62070576, 0.65056529,
+      0.67173917, 0.68741535, 0.69943428, 0.70891502),
+    tolerance = 1e-7
+  )
+  expect_equal(attr(fit_ceac_cluster_delta, "method"), "delta")
+})
+
 test_that("ceac works with cea_boot objects", {
   expect_s3_class(fit_ceac_boot, "cea_ceac")
   expect_equal(dim(fit_ceac_boot), c(11, 2))
@@ -92,11 +118,13 @@ test_that("ceac works with cea_boot objects", {
 test_that("ceac gives appropriate errors", {
   expect_error(ceac(fit_mcglm), "no applicable method")
   expect_error(ceac(fit, method = "x"), class = "cea_error_unknown_method")
-  expect_error(ceac(fit), class = "cea_error_missing_R")
+  expect_error(ceac(fit, method = "boot"), class = "cea_error_missing_R")
   expect_error(ceac(fit, R = 9, QALYs = "X"), class = "cea_error_unknown_outcome")
   expect_error(ceac(boot_est, QALYs = "X"), class = "cea_error_unknown_outcome")
-  expect_error(ceac(fit_pooled, R = 9, wtp_max = 100000, wtp_step = 10000),
-               class = "cea_error_bootstrap_pooled")
+  expect_error(
+    ceac(fit_pooled, R = 9, wtp_max = 100000, wtp_step = 10000, method = "boot", sim = "ordinary"),
+    class = "cea_error_bootstrap_pooled"
+  )
 })
 
 test_that("autoplot.cea_ceac works as expected", {

@@ -38,7 +38,7 @@ ci <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "
 #' @rdname ci
 #' @export
 ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE",
-                            method = "boot", R, sim = "ordinary", ...) {
+                            method = "delta", R, sim = "parametric", ...) {
   if (!rlang::is_string(method, c("boot", "delta"))) stop_unknown_method(method)
   if (!rlang::is_character(outcomes)) stop_invalid_outcome()
   if (!all(outcomes %in% c(names(x$linear_pred), "INMB", "INHB"))) stop_unknown_outcome(

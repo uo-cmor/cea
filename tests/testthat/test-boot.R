@@ -1,10 +1,9 @@
 t0 <- c(QALYs = QALYs(fit), Costs = Costs(fit))
-
 t0_fct <- cbind(QALYs = QALYs(fit_fct), Costs = Costs(fit_fct))
-
 t0_pooled <- cbind(QALYs = QALYs(fit_pooled), Costs = Costs(fit_pooled))
+t0_cluster <- c(QALYs = QALYs(fit_cluster), Costs = Costs(fit_cluster))
 
-test_that("boot works as expected", {
+test_that("ordinary boot works as expected", {
   expect_s3_class(boot_est, "cea_boot")
   expect_equal(boot_est$t0, t0)
   expect_equal(dim(boot_est$t), c(9, 2))
@@ -19,6 +18,12 @@ test_that("parametric boot works as expected", {
   expect_equal(dim(boot_est_par$t), c(9, 2))
   expect_equal(boot_est_par$R, 9)
   expect_equal(boot_est_par$sim, "parametric")
+
+  expect_s3_class(boot_est_cluster_par, "cea_boot")
+  expect_equal(boot_est_cluster_par$t0, t0_cluster)
+  expect_equal(dim(boot_est_cluster_par$t), c(9, 2))
+  expect_equal(boot_est_cluster_par$R, 9)
+  expect_equal(boot_est_cluster_par$sim, "parametric")
 })
 
 test_that("boot works with factor treatment variable", {
@@ -45,7 +50,9 @@ test_that("boot gives appropriate error messages", {
   expect_error(boot(fit_mcglm, R = 9), class = "cea_error_incorrect_class")
   expect_error(boot(fit, sim = "antithetic"), class = "cea_error_unknown_sim")
   expect_error(boot(fit, sim = "abc"), class = "cea_error_unknown_sim")
-  expect_error(boot(fit_pooled), class = "cea_error_bootstrap_pooled")
+  expect_error(boot(fit_pooled, sim = "ordinary"), class = "cea_error_bootstrap_pooled")
+  expect_error(boot(fit_cluster, R = 9, sim = "ordinary"), class = "cea_error_bootstrap_cluster")
+  expect_error(boot(fit_centre, R = 9, sim = "ordinary"), class = "cea_error_bootstrap_cluster")
 })
 
 test_that("autoplot.cea_boot works as expected", {

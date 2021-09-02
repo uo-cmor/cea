@@ -21,3 +21,10 @@ stop_bootstrap_pooled <- function() {
   )
   rlang::cnd_signal(rlang::error_cnd("cea_error_bootstrap_pooled", message = x))
 }
+
+stop_bootstrap_cluster <- function(variable) {
+  x <- paste0(
+    "The non-parametric bootstrap is not currently implemented for clustered data.\n"
+  )
+  rlang::cnd_signal(rlang::error_cnd("cea_error_bootstrap_cluster", message = x))
+}

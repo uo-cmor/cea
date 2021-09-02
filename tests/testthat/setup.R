@@ -25,21 +25,26 @@ fit_lp <- estimate(
   data = moa2_ex
 )
 
-fit_cluster <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_cluster,
-                        cluster = "cluster", control_algorithm = list(max_iter = 50))
+fit_cluster <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre,
+                        cluster = "centre", control_algorithm = list(max_iter = 50))
+fit_centre <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre,
+                        centre = "centre", control_algorithm = list(max_iter = 50))
 fit_mp <- estimate(
-  "QALYs", "Cost", "booster", c("age", "sex"), data = moa2_cluster,
+  "QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre,
   control_algorithm = list(max_iter = 50),
   matrix_pred = rep(
-    list(c(mcglm::mc_id(moa2_cluster), mcglm::mc_mixed(~0 + cluster, moa2_cluster))),
+    list(c(mcglm::mc_id(moa2_centre), mcglm::mc_mixed(~0 + centre, moa2_centre))),
     2
   )
 )
 
-boot_est <- boot(fit, R = 9)
+boot_est <- boot(fit, R = 9, sim = "ordinary")
 boot_est_par <- boot(fit, R = 9, sim = "parametric")
 boot_est_fct <- boot(fit_fct, R = 9, sim = "parametric")
 boot_est_fct2 <- boot(fit_fct2, R = 9, sim = "parametric")
+
+#boot_est_cluster <- boot(fit_cluster, R = 9, sim = "ordinary")
+boot_est_cluster_par <- boot(fit_cluster, R = 9, sim = "parametric")
 
 ### MI methods require `mice`
 

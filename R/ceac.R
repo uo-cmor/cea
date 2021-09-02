@@ -28,7 +28,7 @@ ceac <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs", ...) {
 #' @rdname ceac
 #' @export
 ceac.cea_estimate <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs",
-                              estimand = "ATE", method = "boot", R, sim = "ordinary", ...) {
+                              estimand = "ATE", method = "delta", R, sim = "parametric", ...) {
   if (!rlang::is_string(method, c("boot", "delta"))) stop_unknown_method(method)
   if (method == "boot" && missing(R)) stop_missing_R()
   if (!all(c(QALYs, Costs) %in% names(x$linear_pred)))

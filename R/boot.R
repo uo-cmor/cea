@@ -18,7 +18,7 @@
 #'     of their `boot`-package equivalents.
 #'
 #' @export
-boot <- function(x, R, estimand = "ATE", sim = "ordinary", weights = NULL,
+boot <- function(x, R, estimand = "ATE", sim = "parametric", weights = NULL,
                  simple = FALSE, parallel = c("no", "multicore", "snow"),
                  ncpus = getOption("cea.boot.ncpus", 1L), cl = NULL) {
   if (!inherits(x, "cea_estimate")) stop_incorrect_class("cea_estimate")
@@ -44,6 +44,8 @@ boot <- function(x, R, estimand = "ATE", sim = "ordinary", weights = NULL,
     )))
   } else {
     if (inherits(x, "cea_pooled")) stop_bootstrap_pooled()
+    if (!is.null(attr(x, "cluster"))) stop_bootstrap_cluster("cluster")
+    if (!is.null(attr(x, "centre"))) stop_bootstrap_cluster("centre")
     est_fun <- function(idxs, i) {
       call. <- attr(x, "call")
       call.$data <- x$data[i, ]
