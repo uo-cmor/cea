@@ -224,7 +224,12 @@ print.cea_estimate <- function(x, ...) {
   cat("------------------\n")
   cat("Univariate Models:\n\n")
   for (i in seq_along(x$linear_pred)) {
-    cat("  ", names(x$linear_pred)[[i]], ": ", rlang::as_label(x$linear_pred[[i]]), "\n", sep = "")
+    nm <- names(x$linear_pred)[[i]]
+    len_nm <- nchar(nm, type = "width")
+    form <- deparse(x$linear_pred[[i]], width.cutoff = 80 - len_nm - 6)
+
+    cat("  ", nm, ": ",
+        paste(form, collapse = paste0("\n", strrep(" ", len_nm + 2))), "\n", sep = "")
     cat("    * Link function:", x$link[[i]], "\n")
     cat("    * Variance function:", x$variance[[i]], "\n")
     cat("    * Covariance function:", x$covariance[[i]], "\n\n")
@@ -262,8 +267,12 @@ print.cea_mira <- function(x, ...) {
   cat("------------------\n")
   cat("Univariate Models:\n\n")
   for (i in seq_along(x1$linear_pred)) {
-    cat("  ", names(x1$linear_pred)[[i]], ": ",
-        rlang::as_label(x1$linear_pred[[i]]), "\n", sep = "")
+    nm <- names(x1$linear_pred)[[i]]
+    len_nm <- nchar(nm, type = "width")
+    form <- deparse(x1$linear_pred[[i]], width.cutoff = 80 - len_nm - 6)
+
+    cat("  ", nm, ": ",
+        paste(form, collapse = paste0("\n", strrep(" ", len_nm + 2))), "\n", sep = "")
     cat("    * Link function:", x1$link[[i]], "\n")
     cat("    * Variance function:", x1$variance[[i]], "\n")
     cat("    * Covariance function:", x1$covariance[[i]], "\n\n")
