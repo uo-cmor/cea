@@ -45,6 +45,9 @@ INHB <- function(x, wtp, estimand = "ATE") {
   QALYs(x, estimand) - Costs(x, estimand) / wtp
 }
 
+# `extract()` should be made generic to allow different methods for `cea_estimate` subclasses
+# Or define classed subfunctions (extract_tx_idxs, etc) to allow the same wrapper function to be
+# used for different subclasses
 extract <- function(x, outcome, estimand = "ATE") {
   if (!inherits(x, "cea_estimate")) stop_incorrect_class("cea_estimate")
   if (length(idx <- which(names(x$linear_pred) == outcome)) == 0) stop_unknown_outcome(outcome)

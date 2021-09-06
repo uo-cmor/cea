@@ -5,7 +5,7 @@ test_that("estimate gives appropriate messages", {
 skip_if_not_installed("mice", "3.0")
 
 test_that("pool_cea works as expected", {
-  expect_s3_class(fit_pooled, "cea_pooled")
+  expect_s3_class(fit_pooled, "cea_mcglm_pooled")
   expect_s3_class(fit_pooled, "cea_estimate")
   expect_equal(fit_pooled$m, 2)
   expect_equal(fit_pooled$Regression, fit_fct$Regression)
@@ -47,7 +47,7 @@ test_that("vcov.fit_pooled works", {
   expect_equal(vcov(fit_pooled), as.matrix(fit_pooled$vcov))
 })
 
-test_that("print.cea_pooled works", {
+test_that("print.cea_mcglm_pooled works", {
   expect_snapshot_output(fit_pooled)
   with_sink(tempfile(), expect_equal(print(fit), fit))
 })

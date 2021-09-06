@@ -166,7 +166,7 @@ estimate.data.frame <- function(QALYs, costs, treatment, covars, data, centre = 
                  variance = variance, data = data, control_algorithm = control_algorithm, ...)
   )
 
-  class(out) <- c("cea_estimate", class(out))
+  class(out) <- c("cea_mcglm", "cea_estimate", class(out))
   attr(out, "call") <- cl
   attr(out, "tx") <- treatment
   attr(out, "centre") <- centre
@@ -214,7 +214,7 @@ estimate.default <- function(QALYs, costs, treatment, covars, data, centre = NUL
 }
 
 #' @export
-print.cea_estimate <- function(x, ...) {
+print.cea_mcglm <- function(x, ...) {
   cat("===============================================\n")
   cat("=== Cost-Effectiveness Regression Estimates ===\n")
   cat("===============================================\n\n")
@@ -224,6 +224,8 @@ print.cea_estimate <- function(x, ...) {
   cat("------------------\n")
   cat("Univariate Models:\n\n")
   for (i in seq_along(x$linear_pred)) {
+    # define a `extract_models()` or similar to use here
+    # -- then the same print function can be used for all `cea_estimate` subclasses
     nm <- names(x$linear_pred)[[i]]
     len_nm <- nchar(nm, type = "width")
     form <- deparse(x$linear_pred[[i]], width.cutoff = 80 - len_nm - 6)

@@ -70,18 +70,14 @@ pool_cea <- function(x, ...) {
          offset = x1$offset,
          data = x$analyses[[1]]$data, ## This is only the first imputed dataset
          pooled = pooled),
-    class = c("cea_pooled", "cea_estimate"),
+    class = c("cea_mcglm_pooled", "cea_mcglm", "cea_estimate"),
     call = x$call, call1 = x$call1,
     tx = attr(x1, "tx")
   )
-
-  # extract lists of coefficients & vcov matrices (from each imputed dataset)
-  # calculate pooled result (as in pool_vector in MOA-II project)
-  # recreate into `cea_pooled / cea_estimate` object
 }
 
 #' @export
-print.cea_pooled <- function(x, ...) {
+print.cea_mcglm_pooled <- function(x, ...) {
   cat("======================================================\n")
   cat("=== Pooled Cost-Effectiveness Regression Estimates ===\n")
   cat("======================================================\n")
@@ -131,8 +127,8 @@ barnard.rubin <- function(m, b, t, dfcom = .Machine$double.xmax) {
 
 #' @importFrom stats coef
 #' @export
-coef.cea_pooled <- function(object, ...) c(object$Regression, object$Covariance)
+coef.cea_mcglm_pooled <- function(object, ...) c(object$Regression, object$Covariance)
 
 #' @importFrom stats vcov
 #' @export
-vcov.cea_pooled <- function(object, ...) as.matrix(object$vcov)
+vcov.cea_mcglm_pooled <- function(object, ...) as.matrix(object$vcov)

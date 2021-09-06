@@ -39,7 +39,7 @@ tidy.cea_estimate <- function(x, ...) {
 }
 
 #' @export
-tidy.cea_pooled <- function(x, ...) {
+tidy.cea_mcglm_pooled <- function(x, ...) {
   vars <- names(x$beta_names)
   nvars <- length(vars)
   n_beta <- unlist(x$Information$n_betas)

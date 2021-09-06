@@ -1,4 +1,4 @@
-# print.cea_pooled works
+# print.cea_mcglm_pooled works
 
     ======================================================
     === Pooled Cost-Effectiveness Regression Estimates ===

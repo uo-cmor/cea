@@ -27,7 +27,7 @@ test_that("tidy.cea_estimate works", {
   expect_equal(td_fct$p.value, 2 * (1 - stats::pnorm(abs(td_fct$statistic))))
 })
 
-test_that("tidy.cea_pooled works", {
+test_that("tidy.cea_mcglm_pooled works", {
   td <- tidy(fit_pooled)
   expect_s3_class(td, "tbl_df")
   expect_equal(dim(td), c(15, 7))

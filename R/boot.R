@@ -43,7 +43,7 @@ boot_cea <- function(x, R, estimand = "ATE", sim = "parametric", weights = NULL,
       simple = !!simple, parallel = !!parallel, ncpus = !!ncpus, cl = !!cl
     )))
   } else {
-    if (inherits(x, "cea_pooled")) stop_bootstrap_pooled()
+    if (inherits(x, "cea_mcglm_pooled")) stop_bootstrap_pooled()
     if (!is.null(attr(x, "cluster"))) stop_bootstrap_cluster("cluster")
     if (!is.null(attr(x, "centre"))) stop_bootstrap_cluster("centre")
     est_fun <- function(idxs, i) {

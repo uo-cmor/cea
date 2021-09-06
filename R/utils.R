@@ -15,3 +15,4 @@ is_valid_treatment <- function(x) {
   if (!is.numeric(x)) return(FALSE)
   all(x %in% 0:1)
 }
+
