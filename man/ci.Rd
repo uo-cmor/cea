@@ -15,9 +15,9 @@ ci(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE", ...)
   type = "bca",
   wtp,
   estimand = "ATE",
-  method = "boot",
+  method = "delta",
   R,
-  sim = "ordinary",
+  sim = "parametric",
   ...
 )
 
@@ -41,7 +41,7 @@ Possible values are "QALYs", "Costs", "INMB", or "INHB".}
 effect (ATE), average treatment effect on the treated (ATT), or average
 treatment effect on the controls (ATC). Only used for non-linear models.}
 
-\item{...}{Passed to \code{\link{boot}}.}
+\item{...}{Passed to \code{\link{boot_cea}}.}
 
 \item{method}{Which method to use. Available methods are 'boot' (bootstrap)
 and 'delta' (delta approximation) are implemented.}

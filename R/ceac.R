@@ -18,7 +18,7 @@
 #' @param sim A character vector indicating the type of simulation required.
 #'     Possible values are "ordinary" (the default), "parametric", "balanced",
 #'     or "permutation".
-#' @param ... Passed to \code{\link{boot}}.
+#' @param ... Passed to \code{\link{boot_cea}}.
 #'
 #' @export
 ceac <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs", ...) {
@@ -40,7 +40,7 @@ ceac.cea_estimate <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Co
   if (method == "delta") {
     extract_ceac <- calculate_delta_ceac(x, wtp, QALYs, Costs, estimand)
   } else if (method == "boot") {
-    boot_est <- boot(x, R = R, estimand = estimand, sim = sim, ...)
+    boot_est <- boot_cea(x, R = R, estimand = estimand, sim = sim, ...)
     extract_ceac <- calculate_boot_ceac(boot_est, wtp, QALYs, Costs)
   }
 

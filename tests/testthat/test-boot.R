@@ -47,12 +47,13 @@ test_that("boot works with pooled regression analysis", {
 })
 
 test_that("boot gives appropriate error messages", {
-  expect_error(boot(fit_mcglm, R = 9), class = "cea_error_incorrect_class")
-  expect_error(boot(fit, sim = "antithetic"), class = "cea_error_unknown_sim")
-  expect_error(boot(fit, sim = "abc"), class = "cea_error_unknown_sim")
-  expect_error(boot(fit_pooled, sim = "ordinary"), class = "cea_error_bootstrap_pooled")
-  expect_error(boot(fit_cluster, R = 9, sim = "ordinary"), class = "cea_error_bootstrap_cluster")
-  expect_error(boot(fit_centre, R = 9, sim = "ordinary"), class = "cea_error_bootstrap_cluster")
+  expect_error(boot_cea(fit_mcglm, R = 9), class = "cea_error_incorrect_class")
+  expect_error(boot_cea(fit, sim = "antithetic"), class = "cea_error_unknown_sim")
+  expect_error(boot_cea(fit, sim = "abc"), class = "cea_error_unknown_sim")
+  expect_error(boot_cea(fit_pooled, sim = "ordinary"), class = "cea_error_bootstrap_pooled")
+  expect_error(boot_cea(fit_cluster, R = 9, sim = "ordinary"),
+               class = "cea_error_bootstrap_cluster")
+  expect_error(boot_cea(fit_centre, R = 9, sim = "ordinary"), class = "cea_error_bootstrap_cluster")
 })
 
 test_that("autoplot.cea_boot works as expected", {

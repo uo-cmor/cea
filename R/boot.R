@@ -18,9 +18,9 @@
 #'     of their `boot`-package equivalents.
 #'
 #' @export
-boot <- function(x, R, estimand = "ATE", sim = "parametric", weights = NULL,
-                 simple = FALSE, parallel = c("no", "multicore", "snow"),
-                 ncpus = getOption("cea.boot.ncpus", 1L), cl = NULL) {
+boot_cea <- function(x, R, estimand = "ATE", sim = "parametric", weights = NULL,
+                     simple = FALSE, parallel = c("no", "multicore", "snow"),
+                     ncpus = getOption("cea.boot.ncpus", 1L), cl = NULL) {
   if (!inherits(x, "cea_estimate")) stop_incorrect_class("cea_estimate")
   if (!rlang::is_string(sim, c("ordinary", "parametric", "balanced", "permutation")))
     stop_unknown_sim(sim)

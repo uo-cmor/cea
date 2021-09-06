@@ -28,7 +28,7 @@
 #' @param sim A character vector indicating the type of simulation required.
 #'     Possible values are "ordinary" (the default), "parametric", "balanced",
 #'     or "permutation".
-#' @param ... Passed to \code{\link{boot}}.
+#' @param ... Passed to \code{\link{boot_cea}}.
 #'
 #' @export
 ci <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE", ...) {
@@ -55,7 +55,7 @@ ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp,
     if (method == "boot" && type == "bca" && R < nrow(x$data)) stop_R_too_small(R, nrow(x$data))
     if (method == "boot" && type == "bca" && sim == "parametric") stop_invalid_bca_parametric()
 
-    boot_est <- boot(x, R = R, estimand = estimand, sim = sim, ...)
+    boot_est <- boot_cea(x, R = R, estimand = estimand, sim = sim, ...)
 
     out <- calculate_boot_cis(boot_est, outcomes, conf, type, wtp)
   }

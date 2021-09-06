@@ -38,13 +38,13 @@ fit_mp <- estimate(
   )
 )
 
-boot_est <- boot(fit, R = 9, sim = "ordinary")
-boot_est_par <- boot(fit, R = 9, sim = "parametric")
-boot_est_fct <- boot(fit_fct, R = 9, sim = "parametric")
-boot_est_fct2 <- boot(fit_fct2, R = 9, sim = "parametric")
+boot_est <- boot_cea(fit, R = 9, sim = "ordinary")
+boot_est_par <- boot_cea(fit, R = 9, sim = "parametric")
+boot_est_fct <- boot_cea(fit_fct, R = 9, sim = "parametric")
+boot_est_fct2 <- boot_cea(fit_fct2, R = 9, sim = "parametric")
 
-#boot_est_cluster <- boot(fit_cluster, R = 9, sim = "ordinary")
-boot_est_cluster_par <- boot(fit_cluster, R = 9, sim = "parametric")
+#boot_est_cluster <- boot_cea(fit_cluster, R = 9, sim = "ordinary")
+boot_est_cluster_par <- boot_cea(fit_cluster, R = 9, sim = "parametric")
 
 ### MI methods require `mice`
 
@@ -57,4 +57,4 @@ fit_mi <- estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2_mi)
 
 fit_pooled <- pool_cea(fit_mi)
 
-boot_pooled <- boot(fit_pooled, R = 9, sim = "parametric")
+boot_pooled <- boot_cea(fit_pooled, R = 9, sim = "parametric")

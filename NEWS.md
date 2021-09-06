@@ -1,5 +1,7 @@
 # cea 0.0.0.9000
 
+* Renamed `boot()` to `boot_cea()`.
+
 * Added `pool_cea()` and associated `print()`, `coef()`, `vcov()` and `tidy()`
   methods to pool multiple-imputation regression results.
 

@@ -10,6 +10,7 @@ estimate(
   treatment,
   covars,
   data,
+  centre = NULL,
   cluster = NULL,
   linear_pred = NULL,
   matrix_pred = NULL,
@@ -31,8 +32,14 @@ included as (baseline) covariates in the regression models.}
 \code{\link[base]{as.data.frame}} to a data frame) or a \code{mids} object
 containing the variables in the model.}
 
-\item{cluster}{(optional) Character vector naming variables in \code{data}
-signifying cluster membership.}
+\item{centre}{(optional) Character string naming a variable in \code{data}
+signifying centre membership in a multicentre trial.}
+
+\item{cluster}{(optional) Character vector naming a variable in \code{data}
+signifying cluster membership in a cluster-randomised trial. NOTE: At
+present, \code{centre} and \code{cluster} do exactly the same thing (estimate a
+mixed-effects model with centre/cluster random effects), and only one of
+these arguments should be specified.}
 
 \item{linear_pred}{(optional) A list of formula specifying the different
 model components to be estimated. If specified, over-rides the model

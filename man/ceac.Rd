@@ -15,9 +15,9 @@ ceac(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs", ...)
   QALYs = "QALYs",
   Costs = "Costs",
   estimand = "ATE",
-  method = "boot",
+  method = "delta",
   R,
-  sim = "ordinary",
+  sim = "parametric",
   ...
 )
 
@@ -34,7 +34,7 @@ model or bootstrap resampling from the fitted model.}
 \item{QALYs, Costs}{Names of the variables in \code{x} representing QALYs and
 Costs, respectively.}
 
-\item{...}{Passed to \code{\link{boot}}.}
+\item{...}{Passed to \code{\link{boot_cea}}.}
 
 \item{estimand}{String scalar. Whether to calculate the average treatment
 effect (ATE), average treatment effect on the treated (ATT), or average
