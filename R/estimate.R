@@ -234,8 +234,8 @@ estimate.data.frame <- function(QALYs, costs, treatment, covars, data, centre = 
     if (!rlang::is_installed("nlme")) stop_pkg_not_installed("nlme", "'mglmmPQL' method")
 
     if (is.null(family)) {
-      if (is.null(mvfixed)) family <- list(stats::gaussian, stats::quasipoisson)
-      else family <- rep(list(stats::gaussian), length(mvfixed))
+      if (is.null(mvfixed)) family <- c("gaussian", "quasipoisson")
+      else family <- rep("gaussian", length(mvfixed))
     }
 
     if (is.null(mvfixed)) {
@@ -260,7 +260,11 @@ estimate.data.frame <- function(QALYs, costs, treatment, covars, data, centre = 
       if (!all(outcomes %in% names(data)))
         stop_variable_not_found(outcomes[which.max(!(outcomes %in% names(data)))], "data")
       mvfixed <- lapply(mvfixed, function(fm) {rlang::f_lhs(fm) <- quote(value); fm})
-      mvfixed <- stats::setNames(mvfixed, outcomes)
+      if (is.null(names(mvfixed))) names(mvfixed) <- outcomes
+      else {
+        nm_miss <- names(mvfixed) == ""
+        names(mvfixed)[nm_miss] <- outcomes[nm_miss]
+      }
     }
 
     if (is.null(random)) {
@@ -281,8 +285,11 @@ estimate.data.frame <- function(QALYs, costs, treatment, covars, data, centre = 
           data[[centre]] <- as.factor(data[[centre]])
         }
         random <- stats::as.formula(paste0("~ outvar - 1 | ", centre))
-      } else {
+      } else if (length(mvfixed) > 1) {
         random <- ~ outvar - 1 | .cons
+        data$.cons <- 1
+      } else {
+        random <- ~ 1 | .cons
         data$.cons <- 1
       }
     } else {
@@ -292,18 +299,25 @@ estimate.data.frame <- function(QALYs, costs, treatment, covars, data, centre = 
 
     if (is.null(control)) control <- nlme::lmeControl(maxIter = 100, opt = c("nlminb"))
 
-    if (is.null(weights)) weights <- nlme::varIdent(form = ~1 | outvar)
+    if (is.null(weights) && length(mvfixed) > 1) weights <- nlme::varIdent(form = ~1 | outvar)
 
     dat <- make_data_longform(data, outcomes)
 
     out <- if (is.null(random)) {
-      mglmmPQL(mvfixed = mvfixed, family = family, correlation = correlation,
-               weights = weights, data = dat, outcomevar = "outvar", method = nlme_method,
-               niter = max_iter, verbose = verbose, na.action = na.action, control = control)
+      eval(rlang::expr(mglmmPQL(
+        mvfixed = !!mvfixed, family = !!family, correlation = !!correlation,
+        weights = !!weights, data = make_data_longform(data, !!outcomes), outcomevar = "outvar",
+        method = !!nlme_method, niter = !!max_iter, verbose = !!verbose, na.action = !!na.action,
+        control = control
+      )))
     } else {
-      mglmmPQL(mvfixed = mvfixed, random = random, family = family, correlation = correlation,
-               weights = weights, data = dat, outcomevar = "outvar", method = nlme_method,
-               niter = max_iter, verbose = verbose, na.action = na.action, control = control)
+      eval(rlang::expr(mglmmPQL(
+        mvfixed = !!mvfixed, random = !!random, family = !!family, correlation = !!correlation,
+        weights = !!weights, data = make_data_longform(data, !!outcomes), outcomevar = "outvar",
+        method = !!nlme_method, niter = !!max_iter, verbose = !!verbose, na.action = !!na.action,
+        control = control
+      )))
+
     }
     class(out) <- c("cea_mglmmPQL", "cea_estimate", class(out))
     out$data.mglmmPQL <- out$data
@@ -400,9 +414,10 @@ print.cea_mcglm <- function(x, ...) {
   if (is_factor_tx(x)) {
     cat("        ", pad(extract_tx(x), 10), "\n")
   }
-  cat("  QALYs:", sprintf("%+10.3f", QALYs(x)), "\n")
-  cat("  Costs:", sprintf("%+10.0f", Costs(x)), "\n")
-  cat("  ICER: ", sprintf("%10.0f", ICER(x)), "\n\n")
+  if ("QALYs" %in% extract_outcomes(x)) cat("  QALYs:", sprintf("%+10.3f", QALYs(x)), "\n")
+  if ("Costs" %in% extract_outcomes(x)) cat("  Costs:", sprintf("%+10.0f", Costs(x)), "\n")
+  if (all(c("QALYs", "Costs") %in% extract_outcomes(x)))
+      cat("  ICER: ", sprintf("%10.0f", ICER(x)), "\n\n")
 
   cat("===============================================\n")
 
@@ -426,7 +441,7 @@ print.cea_mglmmPQL <- function(x, ...) {
     # -- then the same print function can be used for all `cea_estimate` subclasses
     nm <- names(x$mvfixed)[[i]]
     len_nm <- nchar(nm, type = "width")
-    x$mvfixed[[i]][[2]] <- rlang::sym(levels(x$data$outvar)[[i]])
+    x$mvfixed[[i]][[2]] <- rlang::sym(levels(x$data.mglmmPQL$outvar)[[i]])
     form <- deparse(x$mvfixed[[i]], width.cutoff = 80 - len_nm - 6)
 
     cat("  ", nm, ": ",
@@ -438,11 +453,12 @@ print.cea_mglmmPQL <- function(x, ...) {
   cat("------------------\n")
   cat("Incremental Treatment Effects:\n")
   if (is_factor_tx(x)) {
-    cat("        ", pad(extract_tx(x), 10), "\n") ### To be updated!!!
+    cat("        ", pad(extract_tx(x), 10), "\n")
   }
-  cat("  QALYs:", sprintf("%+10.3f", QALYs(x)), "\n")
-  cat("  Costs:", sprintf("%+10.0f", Costs(x)), "\n")
-  cat("  ICER: ", sprintf("%10.0f", ICER(x)), "\n\n")
+  if ("QALYs" %in% extract_outcomes(x)) cat("  QALYs:", sprintf("%+10.3f", QALYs(x)), "\n")
+  if ("Costs" %in% extract_outcomes(x)) cat("  Costs:", sprintf("%+10.0f", Costs(x)), "\n")
+  if (all(c("QALYs", "Costs") %in% extract_outcomes(x)))
+    cat("  ICER: ", sprintf("%10.0f", ICER(x)), "\n\n")
 
   cat("===============================================\n")
 

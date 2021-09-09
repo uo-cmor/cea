@@ -21,9 +21,11 @@ suppressWarnings({
   )
   fit_ci_cluster_delta <- ci(fit_cluster, c("QALYs", "Costs", "INMB"), conf = 0.8, wtp = 60000,
                              method = "delta")
+  fit_ci_mglmmPQL <- ci(fit_mglmmPQL, c("QALYs", "Costs", "INMB"), conf = 0.8, wtp = 60000,
+                        method = "boot", sim = "parametric", R = 9, type = "perc")
 })
 
-test_that("ci works with cea_estimate objects", {
+test_that("ci works with cea_mcglm objects", {
   expect_s3_class(fit_ci, "cea_ci")
   expect_length(fit_ci, 3)
   expect_equal(dim(fit_ci[[1]]), c(1, 2))
@@ -34,6 +36,19 @@ test_that("ci works with cea_estimate objects", {
   expect_equal(attr(fit_ci, "method"), "boot")
   expect_equal(attr(fit_ci, "type"), "perc")
   expect_equal(attr(fit_ci, "R"), 9)
+})
+
+test_that("ci works with cea_mglmmPQL objects", {
+  expect_s3_class(fit_ci_mglmmPQL, "cea_ci")
+  expect_length(fit_ci_mglmmPQL, 3)
+  expect_equal(dim(fit_ci_mglmmPQL[[1]]), c(1, 2))
+  expect_true(fit_ci_mglmmPQL[[1]][, 1] < fit_ci_mglmmPQL[[1]][, 2])
+  expect_true(fit_ci_mglmmPQL[[2]][, 1] < fit_ci_mglmmPQL[[2]][, 2])
+  expect_true(fit_ci_mglmmPQL[[3]][, 1] < fit_ci_mglmmPQL[[3]][, 2])
+  expect_equal(attr(fit_ci_mglmmPQL, "conf"), 0.8)
+  expect_equal(attr(fit_ci_mglmmPQL, "method"), "boot")
+  expect_equal(attr(fit_ci_mglmmPQL, "type"), "perc")
+  expect_equal(attr(fit_ci_mglmmPQL, "R"), 9)
 })
 
 test_that("ci works with delta method", {

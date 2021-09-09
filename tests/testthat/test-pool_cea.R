@@ -50,4 +50,5 @@ test_that("vcov.fit_pooled works", {
 test_that("print.cea_mcglm_pooled works", {
   expect_snapshot_output(fit_pooled)
   with_sink(tempfile(), expect_equal(print(fit), fit))
+  expect_snapshot_output(fit_pooled_mglmmPQL)
 })

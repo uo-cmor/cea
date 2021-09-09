@@ -96,7 +96,7 @@ print.cea_mglmmPQL_pooled <- function(x, ...) {
   for (i in seq_along(x$mvfixed)) {
     nm <- names(x$mvfixed)[[i]]
     len_nm <- nchar(nm, type = "width")
-    x$mvfixed[[i]][[2]] <- rlang::sym(levels(x$data$outvar)[[i]])
+    x$mvfixed[[i]][[2]] <- rlang::sym(levels(x$data.mglmmPQL$outvar)[[i]])
     form <- deparse(x$mvfixed[[i]], width.cutoff = 80 - len_nm - 6)
 
     cat("  ", nm, ": ",
@@ -193,6 +193,7 @@ make_pooled.cea_mglmmPQL <- function(x, pooled, t, m) {
          data = x1$data,
          family = x1$family,
          iter = vapply(x$analyses, function(z) z$iter, integer(1)),
+         data.mglmmPQL = x1$data.mglmmPQL,
          mvfixed = x1$mvfixed,
          pooled = pooled),
     class = c("cea_mglmmPQL_pooled", "cea_pooled", "cea_mglmmPQL", "cea_estimate"),
@@ -200,3 +201,5 @@ make_pooled.cea_mglmmPQL <- function(x, pooled, t, m) {
     tx = attr(x1, "tx")
   )
 }
+
+vcov.cea_mglmmPQL <- function(object, ...) object$varFix

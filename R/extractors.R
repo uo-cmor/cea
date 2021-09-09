@@ -145,13 +145,18 @@ extract_tx_coefs.cea_mcglm <- function(x, idx, tx) {
   stats::setNames(extract_coefs(x, idx)[which(x$beta_names[[idx]] %in% tx)], extract_tx(x))
 }
 extract_tx_coefs.cea_mglmmPQL <- function(x, idx, tx) {
-  stats::setNames(extract_coefs(x, idx, TRUE)[paste0(tx, ":outvar", x$outcomes[[idx]])], extract_tx(x))
+  if (length(levels(x$data.mglmmPQL$outvar)) == 1) return(extract_coefs(x, idx, TRUE)[tx])
+  stats::setNames(
+    extract_coefs(x, idx, TRUE)[paste0(tx, ":outvar", levels(x$data.mglmmPQL$outvar)[[idx]])],
+    extract_tx(x)
+  )
 }
 
 extract_tx_idx <- function(x, idx, tx) UseMethod("extract_tx_idx")
 extract_tx_idx.cea_mcglm <- function(x, idx, tx) which(x$beta_names[[idx]] %in% tx)
 extract_tx_idx.cea_mglmmPQL <- function(x, idx, tx) {
-  which(names(extract_coefs(x, idx, TRUE)) %in% paste0(tx, ":outvar", x$outcomes[[idx]]))
+  which(names(extract_coefs(x, idx, TRUE))
+        %in% paste0(tx, ":outvar", levels(x$data.mglmmPQL$outvar)[[idx]]))
 }
 
 extract_X <- function(x, idx) UseMethod("extract_X")

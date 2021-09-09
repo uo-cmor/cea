@@ -1,4 +1,4 @@
-# print.cea_estimate works
+# cea_estimate print methods work
 
     ===============================================
     === Cost-Effectiveness Regression Estimates ===
@@ -28,6 +28,35 @@
       QALYs:     +0.070 
       Costs:      +2088 
       ICER:       30015 
+    
+    ===============================================
+
+---
+
+    ===============================================
+    === Cost-Effectiveness Regression Estimates ===
+    ===============================================
+    
+    Multivariate Generalized Linear Mixed-Effects Model
+    
+    Call:
+     estimate.data.frame(QALYs = "QALYs", costs = "Cost", treatment = "booster", 
+        covars = c("age", "sex"), data = moa2_ex, method = "mglmmPQL") 
+    
+    ------------------
+    Univariate Models:
+    
+      QALYs: QALYs ~ booster + age + sex
+        * Family: gaussian 
+        * Link: identity 
+      Costs: Cost ~ booster + age + sex
+        * Family: quasipoisson 
+        * Link: log 
+    ------------------
+    Incremental Treatment Effects:
+      QALYs:     +0.069 
+      Costs:      +2420 
+      ICER:       34994 
     
     ===============================================
 

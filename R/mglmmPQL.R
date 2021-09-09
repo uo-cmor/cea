@@ -18,6 +18,7 @@ make_data_longform <- function(data, outcomes) {
 mergeFormula <- function(feFormulae) {
   lhs <- rhs <- list()
   nout <- length(feFormulae)
+  if (nout == 1) return(feFormulae[[1]])
   for (j in 1:nout) {
     lhs[[j]] <- feFormulae[[j]][[2L]]
     rhs[[j]] <- strsplit(deparse(feFormulae[[j]][[3L]],width.cutoff = 500L), " \\+ ")[[1]]
@@ -28,7 +29,7 @@ mergeFormula <- function(feFormulae) {
   rhs <- c(paste0(unlist(rhs, recursive = TRUE, use.names = TRUE), ":outvar"), "outvar")
 
   lhs <- unlist(lhs[[1]], recursive = TRUE, use.names = TRUE)  # create the merged rhs and lhs in character string form
-  rhs[[length(rhs)]] <- paste(rhs[[length(rhs)]],"-1",sep="")
+  rhs[[length(rhs)]] <- paste(rhs[[length(rhs)]], "-1", sep = "")
   out <- stats::reformulate(rhs, lhs)
   environment(out) <- parent.frame()
 
@@ -38,15 +39,14 @@ mergeFormula <- function(feFormulae) {
 # Extract glm family for each response
 getfamily <- function(j, family) {
   fm <- family[[j]]
-  if(is.character(fm)) fam <- get(fm)
-  if(is.list(fm)) fam <- fm
-  if(is.function(fm))  fam <- fm()
-  if(is.null(fm)){
+  if (is.character(fm)) fm <- get(fm)
+  if (is.function(fm)) fm <- fm()
+  if (is.null(fm)) {
     print(fm)
     stop("'family' not recognized")
   }
 
-  fam
+  fm
 }
 
 # Fit univariate GLMs to each outcome and add linear predictor (eta),
@@ -62,17 +62,10 @@ fitglm = function(fixed, family, data, weights) {
 extractlinkinv <- function(j, data, family) {
   eta1 <- data[data$outvar == levels(as.factor(data$outvar))[j], "eta"]
   w1 <- data[data$outvar == levels(as.factor(data$outvar))[j], "w"]
-  fm <- family[[j]]
-  if (is.list(fm)) {
-    mu1 <- fm$linkinv(eta1)
-    mueta <- fm$mu.eta(eta1)
-    wz1 <- w1*mueta^2 / fm$variance(mu1)
-  }
-  if (is.function(fm)){
-    mu1 <- fm()$linkinv(eta1)
-    mueta <- fm()$mu.eta(eta1)
-    wz1 <- w1*mueta^2 / fm()$variance(mu1)
-  }
+  fm <- getfamily(j, family)
+  mu1 <- fm$linkinv(eta1)
+  mueta <- fm$mu.eta(eta1)
+  wz1 <- w1*mueta^2 / fm$variance(mu1)
 
   data.frame(mu = mu1, mu.eta.val = mueta, wz = wz1)
 }

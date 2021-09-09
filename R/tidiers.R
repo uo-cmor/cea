@@ -41,9 +41,10 @@ tidy.cea_mglmmPQL <- function(x, ...) {
   reg <- tibble::as_tibble(summary(x)$tTable, rownames = "term")
   colnames(reg) <- c("term", "estimate", "std.error", "df", "statistic", "p.value")
   reg$y.level <- regmatches(
-    reg$term, regexpr(paste0("(", paste0(levels(x$data$outvar), collapse = ")|("), ")"), reg$term)
+    reg$term,
+    regexpr(paste0("(", paste0(levels(x$data.mglmmPQL$outvar), collapse = ")|("), ")"), reg$term)
   )
-  reg$y.level <- extract_outcomes(x)[charmatch(reg$y.level, levels(x$data$outvar))]
+  reg$y.level <- extract_outcomes(x)[charmatch(reg$y.level, levels(x$data.mglmmPQL$outvar))]
   reg$term <- gsub(paste0("(:?outvar((", paste0(c("QALYs", "Cost"), collapse = ")|("), ")):?)"),
                    "", reg$term)
   reg$term[reg$term == ""] <- "(Intercept)"
