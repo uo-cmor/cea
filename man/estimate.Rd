@@ -12,11 +12,21 @@ estimate(
   data,
   centre = NULL,
   cluster = NULL,
+  method = "mcglm",
   linear_pred = NULL,
   matrix_pred = NULL,
   link = NULL,
   variance = NULL,
-  control_algorithm = list(),
+  mvfixed = NULL,
+  random = NULL,
+  family = NULL,
+  correlation = NULL,
+  weights = NULL,
+  nlme_method = "REML",
+  na.action = "na.omit",
+  max_iter = 50,
+  verbose = FALSE,
+  control = NULL,
   ...
 )
 }
@@ -41,11 +51,14 @@ present, \code{centre} and \code{cluster} do exactly the same thing (estimate a
 mixed-effects model with centre/cluster random effects), and only one of
 these arguments should be specified.}
 
-\item{linear_pred}{(optional) A list of formula specifying the different
-model components to be estimated. If specified, over-rides the model
-specification in \code{QALYs}, \code{costs}, and optional \code{covars}. See
-\code{\link[mcglm]{mcglm}} for details (if provided, this argument is
-passed to \code{mcglm} unchanged).}
+\item{method}{\code{"mcglm"} or \code{"glmmPQL"}, specifying which model
+fitting algorithm to use.}
+
+\item{linear_pred, mvfixed}{(optional) A list of formulae specifying the
+different model components to be estimated. If specified, over-rides the
+model specification in \code{QALYs}, \code{costs}, and optional \code{covars}. See
+\code{\link[mcglm]{mcglm}} for details (if provided, these arguments are
+passed to \code{mcglm}/\code{mglmmPQL} unchanged).}
 
 \item{matrix_pred}{(optional) A list of matrices to be used on the matrix
 linear predictor. If not specified, the default is to use an identity
@@ -65,55 +78,110 @@ passed to \code{mcglm} unchanged). If not specified, the default is to use a
 "constant" variance function for QALYs and a "tweedie" variation
 function for Costs.}
 
-\item{control_algorithm}{A list of arguments to be passed for the fitting
-algorithm. See \code{\link[mcglm]{mcglm}} and
-\code{\link[mcglm]{fit_mcglm}} for details.}
+\item{random}{(optional) Specification of the random effects component of
+the model for \code{method = "mglmmPQL"}. See \code{\link[nlme]{lme}}
+for details. If not specified, the default is
+\code{~outvar - 1 | centre} (or \code{~outvar - 1 | cluster}) if
+\code{centre} (\code{cluster}) is specified, \code{~outvar - 1} otherwise,
+corresponding to random intercepts for each outcome (within
+centre/cluster).}
 
-\item{...}{Further optional arguments to be passed to
-\code{\link[mcglm]{mcglm}}.}
+\item{family}{(optional) A list of family functions specifying the GLM error
+distribution and link function for each outcome, for
+\code{method = "mglmmPQL"}. Each element of the list should be a valid
+\code{family} value to be passed to \code{\link[stats]{glm}}. If not
+specified, the default is to use the \code{gaussian} family (i.e. OLS) for
+QALYs and \code{quasipoisson} (with a log link) for Costs.}
+
+\item{correlation, weights}{Passed to \code{\link[nlme]{lme}}. If not
+specified, \code{weights} defaults to \code{nlme::varIdent(form = ~1 | outvar)}
+(allowing different variances for each outcome variable).}
+
+\item{nlme_method}{\code{"REML"} (default) or \code{"ML"}; the \code{method}
+argument of \code{\link[nlme]{lme}}.}
+
+\item{na.action}{(optional) What should happen when the data contain \code{NA}s.
+See \code{\link[nlme]{lme}}.}
+
+\item{max_iter}{(optional) Maximum number of McGLM or PQL iterations. NOTE:
+Use \code{control = nlme::lmeControl(maxIter = <x>)} to set the maximum
+number of iterations for the \code{lme} optimization algorithm.}
+
+\item{verbose}{Whether to print messages from the model fitting function
+(default=\code{FALSE}).}
+
+\item{control}{A list of arguments to be passed to the fitting algorithm
+(argument \code{control_algorithm} of \code{\link[mcglm]{mcglm}} for method
+\code{"mcglm"}; \code{control} (returned via the function
+\code{\link[nlme]{lmeControl}}) of \code{\link[nlme]{lme}} for method
+\code{"mglmmPQL"}).}
+
+\item{...}{Further optional arguments to be passed to the underlying model
+fitting function.}
 }
 \value{
 An object of class \code{cea_estimate} inheriting from \code{mcglm}.
 }
 \description{
-Estimate a multivariate covariance generalised linear model (\cite{Bonat &
-Jørgensen 2016}) for the joint incremental costs and QALYs from a
-randomised trial (or other comparable data source). Models are estimated
-using the \code{mcglm} package (\cite{Bonat 2018}).
+Estimate a multivariate generalised linear model for the joint incremental
+costs and QALYs from a randomised trial (or other comparable data
+source). Models can be estimated as either a Multivariate Covariance
+Generalized Linear Model (MCGLM; see
+\cite{Bonat & \enc{Jørgensen}{Jorgensen} 2016}), using the \code{mcglm}
+package (\cite{Bonat 2018}); or a Multivariate Generalized Linear Mixed
+Model (MGLMM) via Penalized Quasi-Likelihood
+(\cite{Achana et al. 2021}).
 }
 \details{
 The standard model specification provides \code{QALYs}, \code{costs}, \code{treatment}, and
-(optional) \code{covars}, to estimate a bivariate regression with common RHS
-variables. If a different specification is required (e.g., estimating
-additional outcomes beyond QALYs and Costs, or using different RHS
-variables in each equation), a custom model specification can be passed
-to \code{linear_pred} (which will be passed directly to
-\code{\link[mcglm]{mcglm}}; see the \code{mcglm} documentation for
-details of the model specification in this case).
+(optional) \code{covars} and \code{centre}/\code{cluster}, to estimate a bivariate
+regression with common RHS variables and optional clustering by trial
+centre or clustered randomisation. If a different specification is
+required (e.g., estimating additional outcomes beyond QALYs and Costs,
+or using different RHS variables in each equation), a custom model
+specification can be passed to \code{linear_pred} (for \code{mcglm}) or
+\code{mvfixed} (for \code{mglmmPQL}). See the \code{\link[mcglm]{mcglm}}
+documentation for details of the model specification in this case (the
+same format is used for both arguments).
 
-In either specification, arguments \code{matrix_pred}, \code{link}, and
-\code{variance} can optionally be specified to override the
-corresponding default values.  See the documentation for
-\code{\link[mcglm]{mcglm}} for the specification of these arguments.
+For either the standard or custom model specifications, arguments
+\code{matrix_pred}, \code{link}, and \code{variance} (for \code{mcglm}) or
+\code{family} and \code{random} (for \code{mglmmPQL}) can optionally be
+specified to override the corresponding default values. See the
+documentation for \code{\link[mcglm]{mcglm}} and \code{\link[nlme]{lme}}
+for the specification of these arguments.
+
 If not specified, \code{matrix_pred} defaults to an identity matrix (for
-each response variable); \code{link} defaults to \code{"identity"} for
-QALYs and \code{"log"} for Costs if the default formula specification is
-used, or \code{"identity"} for all response variables if a custom
-\code{linear_pred} specification is provided; and \code{variance}
-defaults to \code{"constant"} for QALYs and \code{"tweedie"} for Costs
-(\code{"constant"} for all response variables if a custom
-\code{linear_pred} specification is provided). These defaults correspond
-to a linear regression model for QALYs and a Poisson-like GLM
-(equivalent to \code{family = "quasipoisson"} in base \code{glm}) for
-Costs, or a linear regression model for all responses for a custom
-\code{"linear_pred"} specification.
+each response variable) or identity matrix and cluster-specific terms if
+a cluster/centre variable is defined; \code{link} defaults to
+\code{"identity"} for QALYs and \code{"log"} for Costs if the default
+formula specification is used, or \code{"identity"} for all response
+variables if a custom \code{linear_pred} specification is provided; and
+\code{variance} defaults to \code{"constant"} for QALYs and
+\code{"tweedie"} for Costs (\code{"constant"} for all response variables
+if a custom \code{linear_pred} specification is provided).
+
+Defaults for the \code{mglmmPQL} method are \code{family} =
+\code{stats::gaussian} for QALYs and \code{stats::quasipoisson} for
+Costs; and \code{random} = \code{~outvar - 1 (| centre)} (random
+intercepts for each outcome, within centre/cluster if applicable).
+
+These defaults correspond to a linear regression model for QALYs and a
+Poisson-like GLM with log link for Costs, or a linear regression model
+for all responses for a custom \code{"linear_pred"}/\code{mvfixed}
+specification.
 }
 \references{
-Bonat WH, Jørgensen B. \emph{Multivariate covariance generalized linear
-models}. J Royal Stat Soc 2016;65:649-75.
-\url{https://doi.org/10.1111/rssc.12145}
+Achana F, Gallacher D, Oppong R, et al. \emph{Multivariate generalized
+linear mixed-effects models for the analysis of clinical trial-based
+cost-effectiveness data}. Med Decis Making 2021;41(6):667-84.
+\url{https://doi.org/10.1177/0272989X211003880}
 
 Bonat WH. \emph{Multiple response variables regression models in R: The
 mcglm package}. J Stat Soft 2018;84(4):1-30.
 \url{https://doi.org/10.18637/jss.v084.i04}
+
+Bonat WH, \enc{Jørgensen}{Jorgensen} B. \emph{Multivariate covariance
+generalized linear models}. J Royal Stat Soc 2016;65:649-75.
+\url{https://doi.org/10.1111/rssc.12145}
 }

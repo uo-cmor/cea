@@ -41,8 +41,8 @@ ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp,
                             method = "delta", R, sim = "parametric", ...) {
   if (!rlang::is_string(method, c("boot", "delta"))) stop_unknown_method(method)
   if (!rlang::is_character(outcomes)) stop_invalid_outcome()
-  if (!all(outcomes %in% c(names(x$linear_pred), "INMB", "INHB"))) stop_unknown_outcome(
-    outcomes[which.max(!(outcomes %in% c(names(x$linear_pred), "INMB", "INHB")))]
+  if (!all(outcomes %in% c(extract_outcomes(x), "INMB", "INHB"))) stop_unknown_outcome(
+    outcomes[which.max(!(outcomes %in% c(extract_outcomes(x), "INMB", "INHB")))]
   )
   if (any(c("INMB", "INHB") %in% outcomes) && missing(wtp)) stop_missing_wtp()
 
@@ -177,8 +177,12 @@ calculate_delta_cis <- function(x, outcomes, conf, wtp, estimand) {
   V <- extract_var(x)
   out <- list()
 
-  if (any(c("INMB", "INHB", "QALYs") %in% outcomes)) dmu.QALYs <- extract_dmu(x, "QALYs", estimand)
-  if (any(c("INMB", "INHB", "Costs") %in% outcomes)) dmu.Costs <- extract_dmu(x, "Costs", estimand)
+  if (any(c("INMB", "INHB", "QALYs") %in% outcomes)) {
+    dmu.QALYs <- extract_dmu(x, "QALYs", estimand)
+  }
+  if (any(c("INMB", "INHB", "Costs") %in% outcomes)) {
+    dmu.Costs <- extract_dmu(x, "Costs", estimand)
+  }
 
   for (i in outcomes) {
     out[[i]] <- switch(
@@ -189,11 +193,13 @@ calculate_delta_cis <- function(x, outcomes, conf, wtp, estimand) {
                      function(j) c(Costs(x, estimand)[[j]], delta_se(dmu.Costs[[j]], V))),
       INMB = lapply(
         seq_along(dmu.QALYs),
-        function(j) c(INMB(x, wtp, estimand)[[j]], delta_se(dmu.QALYs[[j]] * wtp - dmu.Costs[[j]], V))
+        function(j) c(INMB(x, wtp, estimand)[[j]],
+                      delta_se(dmu.QALYs[[j]] * wtp - dmu.Costs[[j]], V))
       ),
       INHB = lapply(
         seq_along(dmu.QALYs),
-        function(j) c(INHB(x, wtp, estimand)[[j]], delta_se(dmu.QALYs[[j]] - dmu.Costs[[j]] / wtp, V))
+        function(j) c(INHB(x, wtp, estimand)[[j]],
+                      delta_se(dmu.QALYs[[j]] - dmu.Costs[[j]] / wtp, V))
       ),
       lapply(extract_dmu(x, i, estimand),
              function(j) c(extract(x, i, estimand)[[j]], delta_se(j, V)))

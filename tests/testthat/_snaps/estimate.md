@@ -4,6 +4,8 @@
     === Cost-Effectiveness Regression Estimates ===
     ===============================================
     
+    Multivariate Covariate Generalized Linear Model
+    
     Call:
      estimate.data.frame(QALYs = "QALYs", costs = "Cost", treatment = "booster", 
         covars = c("age", "sex"), data = moa2_ex) 
@@ -34,6 +36,8 @@
     ===============================================
     === Cost-Effectiveness Regression Estimates ===
     ===============================================
+    
+    Multivariate Covariate Generalized Linear Model
     
     Call:
      estimate.data.frame(QALYs = "QALYs", costs = "Cost", treatment = "tx", 

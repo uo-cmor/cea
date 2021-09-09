@@ -1,10 +1,11 @@
 test_that("estimate works with default specification", {
   expect_s3_class(fit, "cea_estimate")
   expect_s3_class(fit, "mcglm")
-  expect_equal(fit, fit_mcglm,
-               ignore_attr = c("class", "tx", "call"), ignore_formula_env = TRUE)
+  expect_equal(fit, fit_mcglm, ignore_attr = c("class", "call", "tx"), ignore_formula_env = TRUE)
   expect_s3_class(fit_fct, "cea_estimate")
   expect_s3_class(fit_fct2, "cea_estimate")
+  expect_output(estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_ex,
+                         verbose = TRUE))
 })
 
 test_that("estimate gives appropriate messages", {
@@ -41,19 +42,32 @@ test_that("estimate gives appropriate messages", {
       list("rlang:::is_installed_hook" = function(pkg, version) FALSE),
       estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2_mi)
     ),
-    class = "cea_error_mice_not_installed"
+    class = "cea_error_pkg_not_installed"
   )
   expect_error(
     withr::with_options(
       list("rlang:::is_installed_hook" = function(pkg, version) version < 3.0),
       estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2_mi)
     ),
-    class = "cea_error_mice_not_installed"
+    class = "cea_error_pkg_not_installed"
+  )
+  expect_error(
+    withr::with_options(
+      list("rlang:::is_installed_hook" = function(pkg, version) FALSE),
+      estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_ex)
+    ),
+    class = "cea_error_pkg_not_installed"
+  )
+  expect_error(
+    withr::with_options(
+      list("rlang:::is_installed_hook" = function(pkg, version) FALSE),
+      estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_ex, method = "mglmmPQL")
+    ),
+    class = "cea_error_pkg_not_installed"
   )
   expect_warning(
     estimate(
       "QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, cluster = "centre",
-      control_algorithm = list(max_iter = 50),
       matrix_pred = rep(
         list(c(mcglm::mc_id(moa2_centre), mcglm::mc_mixed(~0 + centre, moa2_centre))),
         2
@@ -64,7 +78,6 @@ test_that("estimate gives appropriate messages", {
   expect_warning(
     estimate(
       "QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = "centre",
-      control_algorithm = list(max_iter = 50),
       matrix_pred = rep(
         list(c(mcglm::mc_id(moa2_centre), mcglm::mc_mixed(~0 + centre, moa2_centre))),
         2
@@ -74,39 +87,37 @@ test_that("estimate gives appropriate messages", {
   )
   expect_error(
     estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = "centre",
-             cluster = "cluster", control_algorithm = list(max_iter = 50)),
+             cluster = "cluster"),
     class = "cea_error_cluster_centre"
   )
   expect_error(
-    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = 1,
-             control_algorithm = list(max_iter = 50)),
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = 1),
     class = "cea_error_not_string"
   )
   expect_error(
-    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = "cluster",
-             control_algorithm = list(max_iter = 50)),
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = "cluster"),
     class = "cea_error_variable_not_found"
   )
   expect_error(
-    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, cluster = 1,
-             control_algorithm = list(max_iter = 50)),
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, cluster = 1),
     class = "cea_error_not_string"
   )
   expect_error(
-    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, cluster = "cluster",
-             control_algorithm = list(max_iter = 50)),
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, cluster = "cluster"),
     class = "cea_error_variable_not_found"
   )
   moa2_centre$centre <- as.integer(moa2_centre$centre)
   expect_warning(
-    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = "centre",
-             control_algorithm = list(max_iter = 50)),
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, centre = "centre"),
     class = "cea_warning_not_factor"
   )
   expect_warning(
-    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, cluster = "centre",
-             control_algorithm = list(max_iter = 50)),
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre, cluster = "centre"),
     class = "cea_warning_not_factor"
+  )
+  expect_error(
+    estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_ex, method = "method"),
+    class = "cea_error_invalid_method"
   )
 })
 
@@ -140,7 +151,7 @@ test_that("estimate works with missing covars", {
       linear_pred = c(QALYs = QALYs ~ booster, Costs = Cost ~ booster),
       matrix_pred = list(mcglm::mc_id(moa2_ex), mcglm::mc_id(moa2_ex)),
       link = c("identity", "log"), variance = c("constant", "tweedie"),
-      data = moa2_ex
+      data = moa2_ex, control_algorithm = list(max_iter = 50)
     )
   )
 

@@ -1,10 +1,10 @@
-warn_formula_override <- function() {
-  x <- "`linear_pred` specification overriding `QALYs`, `costs`, and `covars`."
+warn_formula_override <- function(var) {
+  x <- paste0("`", var, "` specification overriding `QALYs`, `costs`, and `covars`.")
   rlang::cnd_signal(rlang::warning_cnd("cea_warning_formula_override", message = x))
 }
 
-warn_cluster_override <- function(variable) {
-  x <- paste0("`matrix_pred` specification overriding `", variable, "`.")
+warn_cluster_override <- function(argument, cluster) {
+  x <- paste0("`", argument, "` specification overriding `", cluster, "`.")
   rlang::cnd_signal(rlang::warning_cnd("cea_warning_cluster_override", message = x))
 }
 
@@ -28,6 +28,16 @@ stop_not_string <- function(var) {
   rlang::cnd_signal(rlang::error_cnd("cea_error_not_string", message = x))
 }
 
+stop_invalid_method <- function(method) {
+  x <- paste0(
+    "Argument `method` must be one of \"mcglm\", \"mglmmPQL\".\n",
+    rlang::format_error_bullets(c(
+      x = paste0("You've supplied ", rlang::as_label(method), ".")
+    ))
+  )
+  rlang::cnd_signal(rlang::error_cnd("cea_error_invalid_method", message = x))
+}
+
 stop_not_character <- function(var) {
   x <- paste0("Argument `", var, "` must be a character vector.")
   rlang::cnd_signal(rlang::error_cnd("cea_error_not_character", message = x))
@@ -48,13 +58,14 @@ stop_invalid_treatment <- function(tx, type) {
   rlang::cnd_signal(rlang::error_cnd("cea_error_invalid_treatment", message = x))
 }
 
-stop_mice_not_installed <- function(version = NULL) {
+stop_pkg_not_installed <- function(pkg, fn, req_vers = NULL, version = NULL) {
   x <- paste0(
-    "`mice` version 3.0 or greater is required for `estimate.mids()`.\n",
+    "Package `", pkg, "` ", if (!is.null(req_vers)) paste("version", req_vers, "or greater "),
+    "is required for ", fn, ".\n",
     rlang::format_error_bullets(c(
       i = if (!is.null(version)) paste("Version", version, "is currently installed."),
-      "*" = paste(if (is.null(version)) "Install" else "Update", "with `install.packages('mice')`.")
+      "*" = paste0(if (is.null(version)) "Install" else "Update", " with `install.packages('", pkg, "')`.")
     ))
   )
-  rlang::cnd_signal(rlang::error_cnd("cea_error_mice_not_installed", message = x))
+  rlang::cnd_signal(rlang::error_cnd("cea_error_pkg_not_installed", message = x))
 }

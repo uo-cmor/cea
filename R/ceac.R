@@ -31,8 +31,8 @@ ceac.cea_estimate <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Co
                               estimand = "ATE", method = "delta", R, sim = "parametric", ...) {
   if (!rlang::is_string(method, c("boot", "delta"))) stop_unknown_method(method)
   if (method == "boot" && missing(R)) stop_missing_R()
-  if (!all(c(QALYs, Costs) %in% names(x$linear_pred)))
-    stop_unknown_outcome(c(QALYs, Costs)[which.max(!(c(QALYs, Costs) %in% names(x$linear_pred)))])
+  if (!all(c(QALYs, Costs) %in% extract_outcomes(x)))
+    stop_unknown_outcome(c(QALYs, Costs)[which.max(!(c(QALYs, Costs) %in% extract_outcomes(x)))])
 
   wtp <- seq.int(0, wtp_max, wtp_step)
   n_tx <- length(extract_tx(x))

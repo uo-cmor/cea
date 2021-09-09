@@ -25,25 +25,24 @@ boot_cea <- function(x, R, estimand = "ATE", sim = "parametric", weights = NULL,
   if (!rlang::is_string(sim, c("ordinary", "parametric", "balanced", "permutation")))
     stop_unknown_sim(sim)
   if (missing(parallel)) parallel <- getOption("cea.boot.parallel", "no")
-  outcomes <- names(x$linear_pred)
+  outcomes <- extract_outcomes(x)
   if (sim == "parametric") {
     par_fun <- function(data) {
       sapply(outcomes, extract, x = data, estimand = estimand)
     }
     ran_fun <- function(data, mle) {
       out <- data
-      nbeta <- Reduce(`+`, out$Information$n_betas)
-      rand <- c(mvtnorm::rmvnorm(1, c(out$Regression, out$Covariance), as.matrix(out$vcov)))
-      out$Regression <- rand[1:nbeta]
-      out$Covariance <- rand[(nbeta + 1):length(rand)]
-      out
+      nbeta <- extract_nbeta(out)
+      rand <- c(mvtnorm::rmvnorm(1, extract_coefs(out, "reg"),
+                                 as.matrix(vcov(out))[1:nbeta, 1:nbeta]))
+      update_coefs(out, rand)
     }
     out <- eval(rlang::expr(boot::boot(
       x, par_fun, R = !!R, sim = "parametric", weights = !!weights, ran.gen = ran_fun,
       simple = !!simple, parallel = !!parallel, ncpus = !!ncpus, cl = !!cl
     )))
   } else {
-    if (inherits(x, "cea_mcglm_pooled")) stop_bootstrap_pooled()
+    if (inherits(x, "cea_pooled")) stop_bootstrap_pooled()
     if (!is.null(attr(x, "cluster"))) stop_bootstrap_cluster("cluster")
     if (!is.null(attr(x, "centre"))) stop_bootstrap_cluster("centre")
     est_fun <- function(idxs, i) {
@@ -107,3 +106,11 @@ autoplot.cea_boot <- function(object, wtp = NULL, QALYs = "QALYs", Costs = "Cost
 plot.cea_boot <- function(x, ...) {
   print(autoplot(x, ...))
 }
+
+extract_nbeta <- function(x) UseMethod("extract_nbeta")
+extract_nbeta.cea_mcglm <- function(x) length(x$Regression)
+extract_nbeta.cea_mglmmPQL <- function(x) length(x$coefficients$fixed)
+
+update_coefs <- function(x, value) UseMethod("update_coefs")
+update_coefs.cea_mcglm <- function(x, value) {x$Regression <- value; x}
+update_coefs.cea_mglmmPQL <- function(x, value) {x$coefficients$fixed[] <- value; x}

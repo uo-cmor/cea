@@ -3,9 +3,9 @@
 generics::tidy
 
 #' @export
-tidy.cea_estimate <- function(x, ...) {
+tidy.cea_mcglm <- function(x, ...) {
   summ <- with_sink(tempfile(), summary(x))
-  vars <- names(x$beta_names)
+  vars <- extract_outcomes(x)
   extract_tidy <- function(x, comp, lab) {
     out <- tibble::as_tibble(x[[comp]], rownames = "term")
     out$y.level <- lab
@@ -33,9 +33,25 @@ tidy.cea_estimate <- function(x, ...) {
 
   out <- rbind(reg, corr, tau)
   cols <- c("component", "y.level", names(out)[1:5])
-  out[] <- out[, cols]
-  colnames(out) <- cols
-  out
+  out[, cols]
+}
+
+#' @export
+tidy.cea_mglmmPQL <- function(x, ...) {
+  reg <- tibble::as_tibble(summary(x)$tTable, rownames = "term")
+  colnames(reg) <- c("term", "estimate", "std.error", "df", "statistic", "p.value")
+  reg$y.level <- regmatches(
+    reg$term, regexpr(paste0("(", paste0(levels(x$data$outvar), collapse = ")|("), ")"), reg$term)
+  )
+  reg$y.level <- extract_outcomes(x)[charmatch(reg$y.level, levels(x$data$outvar))]
+  reg$term <- gsub(paste0("(:?outvar((", paste0(c("QALYs", "Cost"), collapse = ")|("), ")):?)"),
+                   "", reg$term)
+  reg$term[reg$term == ""] <- "(Intercept)"
+  reg$component <- "regression"
+
+  out <- reg[order(factor(reg$y.level, levels = extract_outcomes(x))), ]
+  cols <- c("component", "y.level", names(out)[1:6])
+  out[, cols]
 }
 
 #' @export

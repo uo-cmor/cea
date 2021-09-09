@@ -7,6 +7,7 @@
 \alias{ICER}
 \alias{INMB}
 \alias{INHB}
+\alias{extract}
 \title{Incremental treatment eFfects}
 \usage{
 QALYs(x, estimand = "ATE")
@@ -18,6 +19,8 @@ ICER(x, estimand = "ATE")
 INMB(x, wtp, estimand = "ATE")
 
 INHB(x, wtp, estimand = "ATE")
+
+extract(x, outcome, estimand = "ATE")
 }
 \arguments{
 \item{x}{\code{cea_estimate} object. The fitted CEA regression model. Must
@@ -28,6 +31,8 @@ effect (ATE), average treatment effect on the treated (ATT), or average
 treatment effect on the controls (ATC). Only used for non-linear models.}
 
 \item{wtp}{Numeric scalar. Willingness-to-pay per QALY gained.}
+
+\item{outcome}{String scalar. Name of the outcome measure to extract.}
 }
 \description{
 Extract incremental treatment effects from a fitted \code{cea_estimate}
