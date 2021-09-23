@@ -27,7 +27,7 @@ BugReports: https://github.com/uo-cmor/cea/issues
 Imports: 
     mvtnorm,
     boot,
-    rlang,
+    rlang (>= 0.4.9),
     tibble,
     ggplot2,
     generics
