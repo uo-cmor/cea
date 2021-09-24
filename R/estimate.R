@@ -339,7 +339,7 @@ estimate.mids <- function(QALYs, costs, treatment, covars, data, centre = NULL, 
                           correlation = NULL, weights = NULL, nlme_method = "REML",
                           na.action = "na.omit", max_iter = 50, verbose = FALSE, control = NULL,
                           ...) {
-  if (!rlang::is_installed("mice", version = "3.0")) {
+  if (!rlang::is_installed("mice") || utils::packageVersion("mice") < "3.0") {
     if (!rlang::is_installed("mice")) stop_pkg_not_installed("mice", "`estimate.mids()`", "3.0")
     stop_pkg_not_installed("mice", "`estimate.mids()`", "3.0", utils::packageVersion("mice"))
   }

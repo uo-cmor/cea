@@ -51,7 +51,7 @@ getfamily <- function(j, family) {
 
 # Fit univariate GLMs to each outcome and add linear predictor (eta),
 # residuals (res), prior weights (w) and working weights (wz) to data frame
-fitglm = function(fixed, family, data, weights) {
+fitglm = function(fixed, family, data) {
   fit0  = stats::glm(fixed, family, data, na.action = "na.omit")
 
   data.frame(fit0$data, y0 = fit0$y, eta = fit0$linear.predictors, res = fit0$residuals,
@@ -121,7 +121,6 @@ mglmmPQL = function(mvfixed, random, family, correlation, weights, data, outcome
   if (!missing(correlation)) mcall$correlation <- correlation
   mcall$weights <- weights
   data$invwt <- 1 / data$wz
-  mcall$method <- method
   mcall$data <- data
   mcall$control <- control
   mcall$na.action <- na.action
