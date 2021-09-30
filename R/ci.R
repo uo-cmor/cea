@@ -31,14 +31,15 @@
 #' @param ... Passed to \code{\link{boot_cea}}.
 #'
 #' @export
-ci <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE", ...) {
+ci <- function(x, outcomes = "INMB", conf = 0.9, type, wtp, estimand = "ATE", ...) {
   UseMethod("ci")
 }
 
 #' @rdname ci
 #' @export
-ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE",
-                            method = "delta", R, sim = "parametric", ...) {
+ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9,
+                            type = if (sim == "parametric") "perc" else "bca", wtp,
+                            estimand = "ATE", method = "delta", R, sim = "parametric", ...) {
   if (!rlang::is_string(method, c("boot", "delta"))) stop_unknown_method(method)
   if (!rlang::is_character(outcomes)) stop_invalid_outcome()
   if (!all(outcomes %in% c(extract_outcomes(x), "INMB", "INHB"))) stop_unknown_outcome(
@@ -72,7 +73,8 @@ ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp,
 
 #' @rdname ci
 #' @export
-ci.cea_boot <- function(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, ...) {
+ci.cea_boot <- function(x, outcomes = "INMB", conf = 0.9,
+                        type = if (x$sim == "parametric") "perc" else "bca", wtp, ...) {
   mult_tx <- is.matrix(x$t0)
   nm <- if (mult_tx) colnames(x$t0) else names(x$t0)
   if (!all(outcomes %in% c(nm, "INMB", "INHB")))
