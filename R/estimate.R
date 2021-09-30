@@ -101,6 +101,11 @@
 #'     \code{\link[stats]{glm}}. If not specified, the default is to use
 #'     \code{\link[stats]{gaussian}()} (i.e. OLS) for QALYs and
 #'     \code{\link[stats]{Gamma}("log")} for Costs.
+#' @param prior For `method = 'brms'` only, specification of priors for
+#'     Bayesian model. See \code{\link[brms]{brm}} and
+#'     \code{\link[brms]{set_prior}} for details. If not specified, uses
+#'     `"normal(0, 5)"` for fixed effects coefficients and `brm` defaults for
+#'     all other parameters.
 #' @param method \code{"mcglm"} or \code{"mglmmPQL"}, specifying which model
 #'     fitting algorithm to use.
 #' @param fixed An alternative way to specify the 'fixed effects' component of
@@ -116,8 +121,8 @@
 #'     the model. Corresponds to the `matrix_pred` argument of
 #'     \code{\link[mcglm]{mcglm}} and the `random` argument of
 #'     \code{\link[nlme]{lme}}; see the corresponding package help for details.
-#'     If not specified, the default is to include random intercepts for each
-#'     outcome (within centre/cluster, if applicable).
+#'     If not specified, the default is to include centre/cluster random
+#'     effects (intercepts) for each outcome (if applicable).
 #' @param verbose Whether to print messages from the model fitting function
 #'     (default=`FALSE`).
 #' @param control A list of arguments to be passed to the fitting algorithm
@@ -135,15 +140,16 @@
 #'
 #' @export
 estimate <- function(QALYs, costs, treatment, covars, data, centre = NULL, cluster = NULL,
-                     family = NULL, method = "mcglm", fixed = NULL, random = NULL, verbose = FALSE,
-                     control = NULL, ...) {
+                     family = NULL, prior = NULL, method = "mcglm", fixed = NULL, random = NULL,
+                     verbose = FALSE, control = NULL, ...) {
   UseMethod("estimate", data)
 }
 
 #' @export
 estimate.data.frame <- function(QALYs, costs, treatment, covars, data, centre = NULL,
-                                cluster = NULL, family = NULL, method = "mcglm", fixed = NULL,
-                                random = NULL, verbose = FALSE, control = NULL, ...) {
+                                cluster = NULL, family = NULL, prior = NULL, method = "mcglm",
+                                fixed = NULL, random = NULL, verbose = FALSE, control = NULL,
+                                ...) {
   cl <- match.call()
 
   switch(
@@ -151,6 +157,7 @@ estimate.data.frame <- function(QALYs, costs, treatment, covars, data, centre = 
     mcglm = if (!rlang::is_installed("mcglm")) stop_pkg_not_installed("mcglm", "'mcglm' method"),
     mglmmPQL = if (!rlang::is_installed("nlme")) stop_pkg_not_installed("nlme",
                                                                         "'mglmmPQL' method"),
+    brms = if (!rlang::is_installed("brms")) stop_pkg_not_installed("brms", "'brms' method"),
     stop_invalid_method(method)
   )
 
@@ -249,7 +256,19 @@ estimate.data.frame <- function(QALYs, costs, treatment, covars, data, centre = 
       mvfixed = !!fixed, random = !!random, family = !!family,
       data = make_data_longform(data, !!outcomes), outcomevar = "outvar", verbose = verbose,
       control = control, ...
-    )))
+    ))),
+    brms = {
+      if (!is.null(random)) fixed <- lapply(fixed, function(f) stats::update(f, random))
+      formula <- brms::mvbrmsformula(flist = fixed, rescor = FALSE)
+      if (is.null(prior)) prior <- rlang::exec(
+        rbind,
+        !!!lapply(names(formula$forms),
+                  function(resp) brms::set_prior("normal(0, 5)", class = "b", resp = resp))
+      )
+      iter <- if ("iter" %in% ...names()) ...elt(which(...names() == "iter")) else 2000
+      brms::brm(formula, data, family, prior, refresh = if (isTRUE(verbose)) max(iter/10, 1) else 0,
+                silent = 2 - verbose, control = control, ...)
+    }
   )
 
   class(out) <- c(paste0("cea_", method), "cea_estimate", class(out))
@@ -268,8 +287,8 @@ estimate.data.frame <- function(QALYs, costs, treatment, covars, data, centre = 
 
 #' @export
 estimate.mids <- function(QALYs, costs, treatment, covars, data, centre = NULL, cluster = NULL,
-                          family = NULL, method = "mcglm", fixed = NULL, random = NULL,
-                          verbose = FALSE, control = NULL, ...) {
+                          family = NULL, prior = NULL, method = "mcglm", fixed = NULL,
+                          random = NULL, verbose = FALSE, control = NULL, ...) {
   if (!rlang::is_installed("mice") || utils::packageVersion("mice") < "3.0") {
     if (!rlang::is_installed("mice")) stop_pkg_not_installed("mice", "`estimate.mids()`", "3.0")
     stop_pkg_not_installed("mice", "`estimate.mids()`", "3.0", utils::packageVersion("mice"))
@@ -281,7 +300,7 @@ estimate.mids <- function(QALYs, costs, treatment, covars, data, centre = NULL, 
   for (i in seq_along(analyses)) {
     data.i <- mice::complete(data, i)
     analyses[[i]] <- estimate(QALYs, costs, treatment, covars, data.i, centre = centre,
-                              cluster = cluster, family = family, method = method,
+                              cluster = cluster, family = family, prior = prior, method = method,
                               fixed = fixed, random = random, verbose = verbose, control = control,
                               ...)
   }
@@ -293,13 +312,13 @@ estimate.mids <- function(QALYs, costs, treatment, covars, data, centre = NULL, 
 
 #' @export
 estimate.default <- function(QALYs, costs, treatment, covars, data, centre = NULL, cluster = NULL,
-                             family = NULL, method = "mcglm", fixed = NULL, random = NULL,
-                             verbose = FALSE, control = NULL, ...) {
+                             family = NULL, prior = NULL, method = "mcglm", fixed = NULL,
+                             random = NULL, verbose = FALSE, control = NULL, ...) {
   cl <- match.call()
 
   if (!is.data.frame(data)) data <- as.data.frame(data)
   out <- estimate(QALYs, costs, treatment, covars, data, centre = centre, cluster = cluster,
-                  family = family, method = method, fixed = fixed, random = random,
+                  family = family, prior = prior, method = method, fixed = fixed, random = random,
                   verbose = verbose, control = control, ...)
   attr(out, "call") <- cl
   out

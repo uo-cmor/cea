@@ -1,5 +1,8 @@
 # cea 0.0.0.9000
 
+* Add `method = 'brms'` option to `estimate()` to estimate Bayesian model.
+  (methods for `cea_brms` objects still to be added)
+
 * Restructure `estimate()` to use common arguments & structure as much as
   possible.
 

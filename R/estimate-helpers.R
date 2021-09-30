@@ -9,10 +9,9 @@ make_random_spec <- function(data, method, n, cluster = NULL) {
       n
     ),
     mglmmPQL = if (!is.null(cluster)) {
-      stats::as.formula(paste0("~ outvar - 1 | ", cluster))
-    } else if (n > 1) {
-      ~ outvar - 1 | .cons
-    } else ~ 1 | .cons
+      stats::as.formula(paste0("~ 1 | ", cluster))
+    } else ~ 1 | .cons,
+    brms = if (!is.null(cluster)) paste0(". ~ . + (1 | ", cluster, ")")
   )
 }
 
