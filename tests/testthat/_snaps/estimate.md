@@ -25,9 +25,9 @@
     
     ------------------
     Incremental Treatment Effects:
-      QALYs:     +0.070 
-      Costs:      +2088 
-      ICER:       30015 
+      QALYs:     +0.069 
+      Costs:      +2421 
+      ICER:       35012 
     
     ===============================================
 
@@ -50,13 +50,13 @@
         * Family: gaussian 
         * Link: identity 
       Costs: Cost ~ booster + age + sex
-        * Family: quasipoisson 
+        * Family: Gamma 
         * Link: log 
     ------------------
     Incremental Treatment Effects:
       QALYs:     +0.069 
-      Costs:      +2420 
-      ICER:       34994 
+      Costs:      +2421 
+      ICER:       35012 
     
     ===============================================
 
@@ -88,9 +88,39 @@
     ------------------
     Incremental Treatment Effects:
                     ExB         MT   MT + ExB 
-      QALYs:     +0.088     +0.171     +0.007 
-      Costs:      +1875      +1834      +1094 
-      ICER:       21240      10744     148299 
+      QALYs:     +0.089     +0.171     +0.007 
+      Costs:      +2238      +2084      +1252 
+      ICER:       25266      12197     167702 
+    
+    ===============================================
+
+---
+
+    ===============================================
+    === Cost-Effectiveness Regression Estimates ===
+    ===============================================
+    
+    Multivariate Generalized Linear Mixed-Effects Model
+    
+    Call:
+     estimate.data.frame(QALYs = "QALYs", costs = "Cost", treatment = "tx", 
+        covars = c("age", "sex"), data = moa2, method = "mglmmPQL") 
+    
+    ------------------
+    Univariate Models:
+    
+      QALYs: QALYs ~ tx + age + sex
+        * Family: gaussian 
+        * Link: identity 
+      Costs: Cost ~ tx + age + sex
+        * Family: Gamma 
+        * Link: log 
+    ------------------
+    Incremental Treatment Effects:
+                    ExB         MT   MT + ExB 
+      QALYs:     +0.089     +0.171     +0.007 
+      Costs:      +2238      +2084      +1252 
+      ICER:       25266      12197     167702 
     
     ===============================================
 
@@ -126,9 +156,9 @@
     Incremental Treatment Effects:
     (From first imputed dataset; use `pool_cea()` to compute pooled estimates)
                     ExB         MT   MT + ExB 
-      QALYs:     +0.088     +0.171     +0.007 
-      Costs:      +1875      +1834      +1094 
-      ICER:       21240      10744     148299 
+      QALYs:     +0.089     +0.171     +0.007 
+      Costs:      +2238      +2084      +1252 
+      ICER:       25266      12197     167702 
     
     ===============================================
 

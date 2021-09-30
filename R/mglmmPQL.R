@@ -36,19 +36,6 @@ mergeFormula <- function(feFormulae) {
   out
 }
 
-# Extract glm family for each response
-getfamily <- function(j, family) {
-  fm <- family[[j]]
-  if (is.character(fm)) fm <- get(fm)
-  if (is.function(fm)) fm <- fm()
-  if (is.null(fm)) {
-    print(fm)
-    stop("'family' not recognized")
-  }
-
-  fm
-}
-
 # Fit univariate GLMs to each outcome and add linear predictor (eta),
 # residuals (res), prior weights (w) and working weights (wz) to data frame
 fitglm = function(fixed, family, data) {
@@ -62,7 +49,7 @@ fitglm = function(fixed, family, data) {
 extractlinkinv <- function(j, data, family) {
   eta1 <- data[data$outvar == levels(as.factor(data$outvar))[j], "eta"]
   w1 <- data[data$outvar == levels(as.factor(data$outvar))[j], "w"]
-  fm <- getfamily(j, family)
+  fm <- get_family(j, family)
   mu1 <- fm$linkinv(eta1)
   mueta <- fm$mu.eta(eta1)
   wz1 <- w1*mueta^2 / fm$variance(mu1)
@@ -71,9 +58,9 @@ extractlinkinv <- function(j, data, family) {
 }
 
 # Export this one (main function to estimate the mglmm model via PQL):
-mglmmPQL = function(mvfixed, random, family, correlation, weights, data, outcomevar,
-                    method = "REML", niter = 200, verbose = TRUE, na.action = "na.omit",
-                    control = nlme::lmeControl(maxIter = 100, opt = c("nlminb")), ...) {
+mglmmPQL = function(mvfixed, random, family, correlation, weights = NULL, data, outcomevar,
+                    nlme_method = "REML", max_iter = 200, verbose = TRUE, na.action = "na.omit",
+                    control = nlme::lmeControl(maxIter = 100), ...) {
   # `data` should be a stacked data frame (one row per outcome per participant), with a
   # factor/character variable indicating which outcome each row refers to
 
@@ -81,6 +68,9 @@ mglmmPQL = function(mvfixed, random, family, correlation, weights, data, outcome
 
   # `random`, `correlation`, `weights`, `method`, `na.action`, `control` passed to `nlme::lme`
 
+  if (is.null(control)) control <- nlme::lmeControl(maxIter = 100)
+  mvfixed <- lapply(mvfixed, function(fm) {rlang::f_lhs(fm) <- quote(value); fm})
+  if (is.null(weights) && length(mvfixed) > 1) weights <- nlme::varIdent(form = ~1 | outvar)
 
   # Set the name of the outcome (indicator) variable in `data` to "outvar"
   names(data)[names(data) == outcomevar] <- "outvar"
@@ -117,7 +107,7 @@ mglmmPQL = function(mvfixed, random, family, correlation, weights, data, outcome
   mcall[["fixed"]] <- fixed # combined fixed effects part of the model
   mcall[[1L]] <- quote(nlme::lme.formula) # function
   if (!missing(random)) mcall$random <- random
-  mcall$method <- method
+  mcall$method <- nlme_method
   if (!missing(correlation)) mcall$correlation <- correlation
   mcall$weights <- weights
   data$invwt <- 1 / data$wz
@@ -126,7 +116,7 @@ mglmmPQL = function(mvfixed, random, family, correlation, weights, data, outcome
   mcall$na.action <- na.action
 
   # Iterate until convergence
-  for (i in seq_len(niter)) {
+  for (i in seq_len(max_iter)) {
     if (verbose) message(gettextf("iteration %d", i), domain = NA)
     iter <- i
     fit <- eval(mcall)
@@ -152,7 +142,7 @@ mglmmPQL = function(mvfixed, random, family, correlation, weights, data, outcome
   fit$call <- Call
   fit$family <- family
   fit$logLik <- as.numeric(NA)
-  fit$method <- method
+  fit$method <- nlme_method
   fit$iter <- iter
   oldClass(fit) <- c("mglmmPQL", oldClass(fit))
 

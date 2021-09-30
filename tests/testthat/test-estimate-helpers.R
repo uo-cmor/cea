@@ -1,0 +1,42 @@
+test_that("get_family works", {
+  family <- list(gaussian(), Gamma("log"))
+  expect_equal(get_family(1, family), gaussian(), ignore_function_env = TRUE)
+  expect_equal(get_family(2, family), Gamma("log"), ignore_function_env = TRUE)
+  expect_equal(get_family(1, list("gaussian")), gaussian(), ignore_function_env = TRUE)
+  expect_equal(get_family(1, list(gaussian)), gaussian(), ignore_function_env = TRUE)
+  expect_error(get_family(1, list("list")))
+})
+
+test_that("extract_variance works", {
+  expect_equal(extract_variance(list(gaussian())), "constant")
+  expect_equal(extract_variance(list(poisson())), "tweedie")
+  expect_equal(extract_variance(list(quasipoisson())), "tweedie")
+  expect_equal(extract_variance(list(Gamma())), "tweedie")
+  expect_equal(extract_variance(list(inverse.gaussian())), "tweedie")
+  expect_equal(extract_variance(list(binomial())), "binomialP")
+  expect_equal(extract_variance(list(quasibinomial())), "binomialP")
+  expect_equal(extract_variance(list(quasi(variance = "constant"))), "constant")
+  expect_equal(extract_variance(list(quasi(variance = "mu"))), "tweedie")
+  expect_equal(extract_variance(list(quasi(variance = "mu^2"))), "tweedie")
+  expect_equal(extract_variance(list(quasi(variance = "mu^3"))), "tweedie")
+  expect_equal(extract_variance(list(quasi(variance = "mu(1-mu)"))), "binomialP")
+  expect_error(extract_variance(list(list(family = "quasi", varfun = "unknown"))),
+               class = "cea_error_unknown_variance")
+  expect_error(extract_variance(list(list(family = "unknown"))),
+               class = "cea_error_unknown_variance")
+})
+
+test_that("extract_power works", {
+  expect_equal(extract_power(list(gaussian())), list(0))
+  expect_equal(extract_power(list(poisson())), list(1))
+  expect_equal(extract_power(list(quasipoisson())), list(1))
+  expect_equal(extract_power(list(Gamma())), list(2))
+  expect_equal(extract_power(list(inverse.gaussian())), list(3))
+  expect_equal(extract_power(list(binomial())), list(1))
+  expect_equal(extract_power(list(quasibinomial())), list(1))
+  expect_equal(extract_power(list(quasi(variance = "constant"))), list(0))
+  expect_equal(extract_power(list(quasi(variance = "mu"))), list(1))
+  expect_equal(extract_power(list(quasi(variance = "mu^2"))), list(2))
+  expect_equal(extract_power(list(quasi(variance = "mu^3"))), list(3))
+  expect_equal(extract_power(list(quasi(variance = "mu(1-mu)"))), list(1))
+})

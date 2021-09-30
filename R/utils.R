@@ -1,4 +1,5 @@
 with_sink <- function(file, code) {
+  if (is.null(file)) return(code)
   sink(file)
   on.exit(sink())
   force(code)
@@ -16,3 +17,4 @@ is_valid_treatment <- function(x) {
   all(x %in% 0:1)
 }
 
+# `%||%` <- function(x, y) if (is.null(x)) y else x

@@ -111,7 +111,7 @@ extract_outcomes.cea_mglmmPQL <- function(x) names(x$mvfixed)
 
 extract_link <- function(x, idx) UseMethod("extract_link")
 extract_link.cea_mcglm <- function(x, idx) x$link[[idx]]
-extract_link.cea_mglmmPQL <- function(x, idx) getfamily(idx, x$family)$link
+extract_link.cea_mglmmPQL <- function(x, idx) get_family(idx, x$family)$link
 
 extract_coefs <- function(x, idx, ...) UseMethod("extract_coefs")
 extract_coefs.cea_mcglm <- function(x, idx, nm = FALSE, ...) {

@@ -101,8 +101,8 @@ print.cea_mglmmPQL_pooled <- function(x, ...) {
 
     cat("  ", nm, ": ",
         paste(form, collapse = paste0("\n", strrep(" ", len_nm + 2))), "\n", sep = "")
-    cat("    * Family:", getfamily(i, x$family)$family, "\n")
-    cat("    * Link:", getfamily(i, x$family)$link, "\n")
+    cat("    * Family:", get_family(i, x$family)$family, "\n")
+    cat("    * Link:", get_family(i, x$family)$link, "\n")
   }
 
   cat("------------------\n")

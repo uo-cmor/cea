@@ -29,9 +29,9 @@
     ------------------
     Incremental Treatment Effects:
                     ExB         MT   MT + ExB 
-      QALYs:     +0.088     +0.171     +0.007 
-      Costs:      +1875      +1834      +1094 
-      ICER:       21240      10744     148299 
+      QALYs:     +0.089     +0.171     +0.007 
+      Costs:      +2238      +2084      +1252 
+      ICER:       25266      12197     167702 
     
     ===============================================
 
@@ -57,14 +57,14 @@
         * Family: gaussian 
         * Link: identity 
       Costs: Cost ~ tx + age + sex
-        * Family: quasipoisson 
+        * Family: Gamma 
         * Link: log 
     ------------------
     Incremental Treatment Effects:
                     ExB         MT   MT + ExB 
       QALYs:     +0.089     +0.171     +0.007 
-      Costs:      +2235      +2081      +1249 
-      ICER:       25227      12177     167326 
+      Costs:      +2238      +2084      +1252 
+      ICER:       25266      12197     167702 
     
     ===============================================
 

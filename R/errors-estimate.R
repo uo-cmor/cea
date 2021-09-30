@@ -28,6 +28,32 @@ stop_not_string <- function(var) {
   rlang::cnd_signal(rlang::error_cnd("cea_error_not_string", message = x))
 }
 
+stop_wrong_type <- function(arg, required) {
+  x <- paste0(
+    "Invalid argument.\n",
+    rlang::format_error_bullets(c(i = paste0("`", arg, "` must be ", required, ".")))
+  )
+  rlang::cnd_signal(rlang::error_cnd("cea_error_wrong_type", message = x))
+}
+
+stop_invalid_family <- function(i) {
+  x <- paste0(
+    "Invalid family.\n",
+    rlang::format_error_bullets(c(i = paste0("Supplied family #", i, " is not recognised.")))
+  )
+  rlang::cnd_signal(rlang::error_cnd("cea_error_invalid_family", message = x))
+}
+
+stop_unknown_variance <- function(i) {
+  x <- paste0(
+    "Unknown variance function.\n",
+    rlang::format_error_bullets(c(
+      i = paste0("Variance for family #", i, " could not be identified.")
+    ))
+  )
+  rlang::cnd_signal(rlang::error_cnd("cea_error_unknown_variance", message = x))
+}
+
 stop_invalid_method <- function(method) {
   x <- paste0(
     "Argument `method` must be one of \"mcglm\", \"mglmmPQL\".\n",

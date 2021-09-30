@@ -1,5 +1,10 @@
 # cea 0.0.0.9000
 
+* Restructure `estimate()` to use common arguments & structure as much as
+  possible.
+
+* Change default GLM family for Costs outcome to `Gamma("log")`.
+
 * Renamed `boot()` to `boot_cea()`.
 
 * Added `pool_cea()` and associated `print()`, `coef()`, `vcov()` and `tidy()`
