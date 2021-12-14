@@ -46,7 +46,7 @@ fit_cluster <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2
 fit_centre <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre,
                        centre = "centre", method = "mglmmPQL")
 fit_cl <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_centre,
-                   random = ~outvar - 1 | centre, method = "mglmmPQL")
+                   random = ~ 1 | centre, method = "mglmmPQL")
 
 boot_est <- boot_cea(fit, R = 9, sim = "ordinary")
 boot_est_par <- boot_cea(fit, R = 9, sim = "parametric")

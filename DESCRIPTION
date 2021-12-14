@@ -18,6 +18,7 @@ Suggests:
     brms,
     mcglm,
     mice (>= 3.0),
+    mockery,
     nlme,
     scales,
     testthat (>= 3.0.0),

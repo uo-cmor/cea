@@ -146,8 +146,8 @@ test_that("ci gives appropriate error messages", {
   expect_error(ci(fit, wtp = 60000, method = "boot"), class = "cea_error_missing_R")
   expect_error(ci(fit, wtp = 60000, method = "boot", R = 1, type = "stud"), class = "cea_error_invalid_ci_type")
   expect_error(ci(fit, wtp = 60000, method = "boot", R = 1, type = "all"), class = "cea_error_invalid_ci_type")
-  expect_error(ci(fit, wtp = 60000, method = "boot", R = 1), class = "cea_error_R_too_small")
-  expect_error(ci(fit, wtp = 60000, method = "boot", R = 39, sim = "parametric"),
+  expect_error(ci(fit, wtp = 60000, method = "boot", type = "bca", R = 1), class = "cea_error_R_too_small")
+  expect_error(ci(fit, wtp = 60000, method = "boot", type = "bca", R = 39, sim = "parametric"),
                class = "cea_error_invalid_bca_parametric")
 
   expect_error(ci(boot_est, outcomes = c("QALYs", "costs")), class = "cea_error_unknown_outcome")
@@ -155,7 +155,7 @@ test_that("ci gives appropriate error messages", {
   expect_error(ci(boot_est, wtp = 60000, type = "stud"), class = "cea_error_invalid_ci_type")
   expect_error(ci(boot_est, wtp = 60000, type = "all"), class = "cea_error_invalid_ci_type")
   expect_error(ci(boot_est, wtp = 60000), class = "cea_error_R_too_small")
-  expect_error(ci(boot_est_par, wtp = 60000), class = "cea_error_invalid_bca_parametric")
+  expect_error(ci(boot_est_par, wtp = 60000, type = "bca"), class = "cea_error_invalid_bca_parametric")
 
   expect_error(
     ci(fit_pooled, c("QALYs", "Costs", "INMB"), conf = 0.8, wtp = 60000, R = 9, type = "perc",

@@ -13,6 +13,7 @@ estimate(
   centre = NULL,
   cluster = NULL,
   family = NULL,
+  prior = NULL,
   method = "mcglm",
   fixed = NULL,
   random = NULL,
@@ -49,6 +50,12 @@ of the list should be a valid \code{family} value specified as for
 \code{\link[stats]{gaussian}()} (i.e. OLS) for QALYs and
 \code{\link[stats]{Gamma}("log")} for Costs.}
 
+\item{prior}{For \code{method = 'brms'} only, specification of priors for
+Bayesian model. See \code{\link[brms]{brm}} and
+\code{\link[brms]{set_prior}} for details. If not specified, uses
+\code{"normal(0, 5)"} for fixed effects coefficients and \code{brm} defaults for
+all other parameters.}
+
 \item{method}{\code{"mcglm"} or \code{"mglmmPQL"}, specifying which model
 fitting algorithm to use.}
 
@@ -66,8 +73,8 @@ component names.}
 the model. Corresponds to the \code{matrix_pred} argument of
 \code{\link[mcglm]{mcglm}} and the \code{random} argument of
 \code{\link[nlme]{lme}}; see the corresponding package help for details.
-If not specified, the default is to include random intercepts for each
-outcome (within centre/cluster, if applicable).}
+If not specified, the default is to include centre/cluster random
+effects (intercepts) for each outcome (if applicable).}
 
 \item{verbose}{Whether to print messages from the model fitting function
 (default=\code{FALSE}).}

@@ -177,13 +177,20 @@ test_that("estimate gives appropriate messages", {
     estimate("QALYs", "Cost", "booster", c("age", "sex", "x"), data = moa2_ex),
     class = "cea_error_variable_not_found"
   )
-  skip_if_not(packageVersion("rlang") >= "0.4.11.9001")
+  #skip_if_not(packageVersion("rlang") >= "0.99.0.9001")
+  {mockery::stub(
+    estimate.mids, 'rlang::is_installed',
+    function(pkg, ...) if (pkg == "mice") FALSE else isTRUE(requireNamespace(pkg,quietly = TRUE))
+  )
   expect_error(
-    withr::with_options(
-      list("rlang:::is_installed_hook" = function(pkg, version) FALSE),
-      estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2_mi)
-    ),
+    estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2_mi),
     regexp = "mice", class = "cea_error_pkg_not_installed"
+  )}
+  {mockery::stub(
+    estimate.mids, 'utils::packageVersion',
+    function(pkg, ...) {
+      if (pkg == "mice") 2.9999 else package_version(packageDescription(pkg, fields = "Version"))
+    }
   )
   expect_error(
     withr::with_options(
@@ -191,7 +198,7 @@ test_that("estimate gives appropriate messages", {
       estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2_mi)
     ),
     regexp = "mice", class = "cea_error_pkg_not_installed"
-  )
+  )}
   expect_error(
     withr::with_options(
       list("rlang:::is_installed_hook" = function(pkg, version) FALSE),
@@ -261,8 +268,8 @@ test_that("estimate works with clustered data", {
   expect_length(fit_cluster$coefficients$random, 1)
   expect_equal(
     fit_cluster$coefficients$random[[1]],
-    matrix(c(1.027887e-22, 3.162782e-22, -4.190670e-22, 2.314895e-9, 7.122755e-9, -9.437649e-9),
-           nrow = 3, ncol = 2, dimnames = list(1:3, c("outvarQALYs", "outvarCost")))
+    matrix(c(-1.168122e-9, 1.854889e-9, -6.867667e-10),
+           nrow = 3, ncol = 1, dimnames = list(1:3, "(Intercept)"))
   )
   expect_equal(attr(fit_cluster, "cluster"), "centre")
 
@@ -284,7 +291,7 @@ test_that("estimate works with mglmmPQL method", {
     {
       data = make_data_longform(moa2_ex, c("QALYs", "Cost")); data$.cons <- 1
       mglmmPQL(list(QALYs = value ~ booster + age + sex, Costs = value ~ booster + age + sex),
-               ~ outvar - 1 | .cons, list(gaussian(), Gamma("log")), verbose = FALSE,
+               ~ 1 | .cons, list(gaussian(), Gamma("log")), verbose = FALSE,
                weights = nlme::varIdent(form = ~1 | outvar), data = data,
                outcomevar = "outcome")[-c(11, 18)]
     }, ignore_attr = TRUE, ignore_function_env = TRUE

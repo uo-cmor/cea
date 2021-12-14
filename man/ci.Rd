@@ -6,13 +6,13 @@
 \alias{ci.cea_boot}
 \title{Confidence intervals for CEA estimates}
 \usage{
-ci(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE", ...)
+ci(x, outcomes = "INMB", conf = 0.9, type, wtp, estimand = "ATE", ...)
 
 \method{ci}{cea_estimate}(
   x,
   outcomes = "INMB",
   conf = 0.9,
-  type = "bca",
+  type = if (sim == "parametric") "perc" else "bca",
   wtp,
   estimand = "ATE",
   method = "delta",
@@ -21,7 +21,14 @@ ci(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, estimand = "ATE", ...)
   ...
 )
 
-\method{ci}{cea_boot}(x, outcomes = "INMB", conf = 0.9, type = "bca", wtp, ...)
+\method{ci}{cea_boot}(
+  x,
+  outcomes = "INMB",
+  conf = 0.9,
+  type = if (x$sim == "parametric") "perc" else "bca",
+  wtp,
+  ...
+)
 }
 \arguments{
 \item{x}{\code{cea_estimate} or \code{cea_boot} object. The fitted CEA regression
