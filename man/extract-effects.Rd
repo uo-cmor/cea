@@ -8,19 +8,19 @@
 \alias{INMB}
 \alias{INHB}
 \alias{extract}
-\title{Incremental treatment eFfects}
+\title{Incremental treatment effects}
 \usage{
-QALYs(x, estimand = "ATE")
+QALYs(x, estimand = "ATE", draw = NULL)
 
-Costs(x, estimand = "ATE")
+Costs(x, estimand = "ATE", draw = NULL)
 
-ICER(x, estimand = "ATE")
+ICER(x, estimand = "ATE", draw = NULL)
 
-INMB(x, wtp, estimand = "ATE")
+INMB(x, wtp, estimand = "ATE", draw = NULL)
 
-INHB(x, wtp, estimand = "ATE")
+INHB(x, wtp, estimand = "ATE", draw = NULL)
 
-extract(x, outcome, estimand = "ATE")
+extract(x, outcome, estimand = "ATE", draw = NULL)
 }
 \arguments{
 \item{x}{\code{cea_estimate} object. The fitted CEA regression model. Must
@@ -29,6 +29,9 @@ contain a 'QALYs' equation.}
 \item{estimand}{String scalar. Whether to calculate the average treatment
 effect (ATE), average treatment effect on the treated (ATT), or average
 treatment effect on the controls (ATC). Only used for non-linear models.}
+
+\item{draw}{Only used for \code{brms} models. Optional (numeric) draw index to
+extract. Default (\code{draw = NULL}) is to use the posterior mean.}
 
 \item{wtp}{Numeric scalar. Willingness-to-pay per QALY gained.}
 

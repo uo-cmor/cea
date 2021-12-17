@@ -157,3 +157,4 @@ test_that("plot.cea_ceac works as expected", {
   expect_s3_class(plt$layers[[1]]$geom, "GeomLine")
   expect_mapequal(plt$labels, list(y = "CEAC", x = "Willingness-to-pay threshold"))
 })
+

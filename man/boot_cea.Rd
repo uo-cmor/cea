@@ -17,8 +17,7 @@ boot_cea(
 )
 }
 \arguments{
-\item{x}{\code{cea_estimate} object. The fitted CEA regression model. Must use
-the default 'formula' specification.}
+\item{x}{\code{cea_estimate} object. The fitted CEA regression model.}
 
 \item{R}{The number of bootstrap replicates.}
 

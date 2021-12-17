@@ -1,10 +1,12 @@
 fit <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_ex)
 fit_mglmmPQL <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_ex,
                          method = "mglmmPQL")
+fit_brms <- estimate("QALYs", "Cost", "booster", c("age", "sex"), data = moa2_ex, method = "brms")
 
 fit_fct <- estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2)
 fit_fct_mglmmPQL <- estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2,
                              method = "mglmmPQL")
+fit_fct_brms <- estimate("QALYs", "Cost", "tx", c("age", "sex"), data = moa2, method = "brms")
 
 moa2_base_exb <- moa2
 contrasts(moa2_base_exb$tx) <- contr.treatment(levels(moa2_base_exb$tx), base = 2)

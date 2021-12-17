@@ -29,7 +29,10 @@ ceac <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs", ...) {
 #' @export
 ceac.cea_estimate <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Costs",
                               estimand = "ATE", method = "delta", R, sim = "parametric", ...) {
-  if (!rlang::is_string(method, c("boot", "delta"))) stop_unknown_method(method)
+  if (!inherits(x, "cea_brms") && !rlang::is_string(method, c("boot", "delta")))
+    stop_unknown_method(method)
+  if (inherits(x, "cea_brms") && (!missing(method) || !missing(R) || !missing(sim)))
+    message_unused_brms_arguments("ceac")
   if (method == "boot" && missing(R)) stop_missing_R()
   if (!all(c(QALYs, Costs) %in% extract_outcomes(x)))
     stop_unknown_outcome(c(QALYs, Costs)[which.max(!(c(QALYs, Costs) %in% extract_outcomes(x)))])
@@ -37,7 +40,9 @@ ceac.cea_estimate <- function(x, wtp_max, wtp_step, QALYs = "QALYs", Costs = "Co
   wtp <- seq.int(0, wtp_max, wtp_step)
   n_tx <- length(extract_tx(x))
 
-  if (method == "delta") {
+  if (inherits(x, "cea_brms")) {
+    extract_ceac <- calculate_posterior_ceac(x, wtp, QALYs, Costs, estimand)
+  } else if (method == "delta") {
     extract_ceac <- calculate_delta_ceac(x, wtp, QALYs, Costs, estimand)
   } else if (method == "boot") {
     boot_est <- boot_cea(x, R = R, estimand = estimand, sim = sim, ...)
@@ -130,4 +135,10 @@ calculate_delta_ceac <- function(x, wtp, QALYs, Costs, estimand, ...) {
       numeric(1)
     )
   }
+}
+
+calculate_posterior_ceac <- function(x, wtp, QALYs, Costs, estimand, ...) {
+  nd <- brms::ndraws(x)
+  function(j)
+    vapply(wtp, function(a) mean(INMB(x, a, estimand, draw = seq_len(nd))[, j] > 0), numeric(1L))
 }

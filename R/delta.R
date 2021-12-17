@@ -3,14 +3,16 @@ extract_dmu <- function(x, outcome, estimand = "ATE") {
   if (length(idx <- which(extract_outcomes(x) == outcome)) == 0) stop_unknown_outcome(outcome)
   tx <- attr(x, "tx")
   if (is.null(x$data[[tx]])) stop_unknown_treatment(tx)
-  if (is.factor(x$data[[tx]])) tx <- paste0(tx, extract_tx(x))
 
   coefs <- extract_coefs(x, idx)
-  start <- if (inherits(x, "cea_mcglm")) {
-    Reduce(`+`, x$Information$n_betas[seq_len(idx - 1)], 0)
-  } else 0
   idx_tx <- extract_tx_idx(x, idx, tx)
-  idx_coef <- start + seq_along(coefs)
+
+  idx_coef <- if (inherits(x, "cea_mcglm")) {
+    Reduce(`+`, x$Information$n_betas[seq_len(idx - 1)], 0) + seq_along(coefs)
+  } else if (inherits(x, "cea_mglmmPQL")) {
+    grep(paste0("outvar", levels(x$data.mglmmPQL$outvar)[[idx]]),
+         names(extract_coefs(x, "all")))
+  }
 
   extract_effect <- function(i) {
     X <- extract_X(x, idx)

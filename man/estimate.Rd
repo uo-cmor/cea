@@ -56,8 +56,8 @@ Bayesian model. See \code{\link[brms]{brm}} and
 \code{"normal(0, 5)"} for fixed effects coefficients and \code{brm} defaults for
 all other parameters.}
 
-\item{method}{\code{"mcglm"} or \code{"mglmmPQL"}, specifying which model
-fitting algorithm to use.}
+\item{method}{\code{"mcglm"}, \code{"mglmmPQL"}, or \code{"brms"},
+specifying which modelling approach to use.}
 
 \item{fixed}{An alternative way to specify the 'fixed effects' component of
 the model. Required if the RHS variables should differ for each equation
@@ -97,12 +97,13 @@ An object of class \code{cea_estimate} inheriting from \code{mcglm}.
 \description{
 Estimate a multivariate generalised linear model for the joint incremental
 costs and QALYs from a randomised trial (or other comparable data
-source). Models can be estimated as either a Multivariate Covariance
+source). Models can be estimated as a Multivariate Covariance
 Generalized Linear Model (MCGLM; see
 \cite{Bonat & J\/orgensen 2016}), using the \code{mcglm}
-package (\cite{Bonat 2018}); or a Multivariate Generalized Linear Mixed
+package (\cite{Bonat 2018}); a Multivariate Generalized Linear Mixed
 Model (MGLMM) via Penalized Quasi-Likelihood
-(\cite{Achana et al. 2021}).
+(\cite{Achana et al. 2021}); or a Bayesian generalized multivariate
+model, using the \code{brms} package (\cite{B\/"urkner 2017, 2018}).
 }
 \details{
 The standard model specification provides \code{QALYs}, \code{costs}, \code{treatment}, and
@@ -175,4 +176,12 @@ mcglm package}. J Stat Soft 2018;84(4):1-30.
 Bonat WH, \enc{Jørgensen}{Jorgensen} B. \emph{Multivariate covariance
 generalized linear models}. J Royal Stat Soc 2016;65:649-75.
 \url{https://doi.org/10.1111/rssc.12145}
+
+\enc{Bürkner}{Burkner} P-C. \emph{brms: An R package for Bayesian multilevel
+models using Stan}. J Stat Soft 2017;80(1):1-28.
+\url{https://doi.org/10.18637/jss.v080.i01}
+
+\enc{Bürkner}{Burkner} P-C. \emph{Advanced Bayesian multilevel modeling with
+the R package brms}. R Journal 2018;10(1):395-411.
+\url{https://doi.org/10.32614/RJ-2018-017}
 }

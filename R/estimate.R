@@ -2,12 +2,13 @@
 #'
 #' Estimate a multivariate generalised linear model for the joint incremental
 #'     costs and QALYs from a randomised trial (or other comparable data
-#'     source). Models can be estimated as either a Multivariate Covariance
+#'     source). Models can be estimated as a Multivariate Covariance
 #'     Generalized Linear Model (MCGLM; see
 #'     \cite{Bonat & J\/orgensen 2016}), using the \code{mcglm}
-#'     package (\cite{Bonat 2018}); or a Multivariate Generalized Linear Mixed
+#'     package (\cite{Bonat 2018}); a Multivariate Generalized Linear Mixed
 #'     Model (MGLMM) via Penalized Quasi-Likelihood
-#'     (\cite{Achana et al. 2021}).
+#'     (\cite{Achana et al. 2021}); or a Bayesian generalized multivariate
+#'     model, using the \code{brms} package (\cite{B\/"urkner 2017, 2018}).
 #'
 #' The standard model specification provides `QALYs`, `costs`, `treatment`, and
 #'     optionally `covars` and `centre`/`cluster`, to estimate a bivariate
@@ -80,6 +81,14 @@
 #'     generalized linear models}. J Royal Stat Soc 2016;65:649-75.
 #'     \url{https://doi.org/10.1111/rssc.12145}
 #'
+#' \enc{Bürkner}{Burkner} P-C. \emph{brms: An R package for Bayesian multilevel
+#'     models using Stan}. J Stat Soft 2017;80(1):1-28.
+#'     \url{https://doi.org/10.18637/jss.v080.i01}
+#'
+#' \enc{Bürkner}{Burkner} P-C. \emph{Advanced Bayesian multilevel modeling with
+#'     the R package brms}. R Journal 2018;10(1):395-411.
+#'     \url{https://doi.org/10.32614/RJ-2018-017}
+#'
 #' @param QALYs,costs,treatment Character strings naming the variables in
 #'     `data` representing QALYs, costs, and treatment assignment,
 #'     respectively.
@@ -106,8 +115,8 @@
 #'     \code{\link[brms]{set_prior}} for details. If not specified, uses
 #'     `"normal(0, 5)"` for fixed effects coefficients and `brm` defaults for
 #'     all other parameters.
-#' @param method \code{"mcglm"} or \code{"mglmmPQL"}, specifying which model
-#'     fitting algorithm to use.
+#' @param method \code{"mcglm"}, \code{"mglmmPQL"}, or \code{"brms"},
+#'     specifying which modelling approach to use.
 #' @param fixed An alternative way to specify the 'fixed effects' component of
 #'     the model. Required if the RHS variables should differ for each equation
 #'     or outcomes other than QALYs and Costs are to be estimated. If used,
@@ -276,6 +285,8 @@ estimate.data.frame <- function(QALYs, costs, treatment, covars, data, centre = 
     out$data.mglmmPQL <- out$data
     out$data <- data
     out$mvfixed <- fixed
+  } else if (method == "brms") {
+    names(out$family) <- names(fixed)
   }
   attr(out, "call") <- cl
   attr(out, "tx") <- treatment
@@ -384,6 +395,44 @@ print.cea_mglmmPQL <- function(x, ...) {
     len_nm <- nchar(nm, type = "width")
     x$mvfixed[[i]][[2]] <- rlang::sym(levels(x$data.mglmmPQL$outvar)[[i]])
     form <- deparse(x$mvfixed[[i]], width.cutoff = 80 - len_nm - 6)
+
+    cat("  ", nm, ": ",
+        paste(form, collapse = paste0("\n", strrep(" ", len_nm + 2))), "\n", sep = "")
+    cat("    * Family:", get_family(i, x$family)$family, "\n")
+    cat("    * Link:", get_family(i, x$family)$link, "\n")
+  }
+
+  cat("------------------\n")
+  cat("Incremental Treatment Effects:\n")
+  if (is_factor_tx(x)) {
+    cat("        ", pad(extract_tx(x), 10), "\n")
+  }
+  if ("QALYs" %in% extract_outcomes(x)) cat("  QALYs:", sprintf("%+10.3f", QALYs(x)), "\n")
+  if ("Costs" %in% extract_outcomes(x)) cat("  Costs:", sprintf("%+10.0f", Costs(x)), "\n")
+  if (all(c("QALYs", "Costs") %in% extract_outcomes(x)))
+    cat("  ICER: ", sprintf("%10.0f", ICER(x)), "\n\n")
+
+  cat("===============================================\n")
+
+  return(invisible(x))
+}
+
+#' @export
+print.cea_brms <- function(x, ...) {
+  cat("===============================================\n")
+  cat("=== Cost-Effectiveness Regression Estimates ===\n")
+  cat("===============================================\n\n")
+
+  cat("Bayesian Generalized Multivariate Linear Model\n\n")
+
+  cat("Call:\n", rlang::quo_text(attr(x, "call")), "\n\n")
+
+  cat("------------------\n")
+  cat("Univariate Models:\n\n")
+  for (i in seq_along(x$formula$forms)) {
+    nm <- names(x$formula$forms)[[i]]
+    len_nm <- nchar(nm, type = "width")
+    form <- deparse(x$formula$forms[[i]]$formula, width.cutoff = 80 - len_nm - 6)
 
     cat("  ", nm, ": ",
         paste(form, collapse = paste0("\n", strrep(" ", len_nm + 2))), "\n", sep = "")

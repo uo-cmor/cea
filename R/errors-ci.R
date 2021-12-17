@@ -48,3 +48,11 @@ stop_invalid_bca_parametric <- function() {
   x <- "`type` = 'bca' cannot be used with `sim` = 'parametric'"
   rlang::cnd_signal(rlang::error_cnd("cea_error_invalid_bca_parametric", message = x))
 }
+
+message_unused_brms_arguments <- function(fn) {
+  x <- rlang::format_error_bullets(paste0(
+    "`", fn, "()`: Arguments ", if (fn == "ci") "'type', ",
+    "'method', 'R', and 'sim' are ignored for `cea_brms` objects"
+  ))
+  rlang::cnd_signal(rlang::message_cnd("cea_message_unused_brms_arguments", message = x))
+}

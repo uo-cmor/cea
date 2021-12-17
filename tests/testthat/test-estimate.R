@@ -297,7 +297,7 @@ test_that("estimate works with mglmmPQL method", {
     }, ignore_attr = TRUE, ignore_function_env = TRUE
   )
   expect_equal(
-    extract_coefs(fit_mglmmPQL),
+    extract_coefs(fit_mglmmPQL, "all"),
     c(outvarQALYs = 0.827995485, outvarCost = 6.533519197, "booster:outvarQALYs" = 0.069154392,
       "booster:outvarCost" = 0.675377935, "outvarQALYs:age" = 0.005092244,
       "outvarCost:age" = 0.021285813, "outvarQALYs:sex" = 0.159939192,

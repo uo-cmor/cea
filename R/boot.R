@@ -3,8 +3,7 @@
 #' Generate R bootstrap replicates of mean incremental QALYs and Costs from a
 #'     fitted CEA regression model, using the `boot` package.
 #'
-#' @param x `cea_estimate` object. The fitted CEA regression model. Must use
-#'     the default 'formula' specification.
+#' @param x `cea_estimate` object. The fitted CEA regression model.
 #' @param R The number of bootstrap replicates.
 #' @param estimand String scalar. Whether to calculate the average treatment
 #'     effect (ATE), average treatment effect on the treated (ATT), or average
@@ -110,6 +109,7 @@ plot.cea_boot <- function(x, ...) {
 extract_nbeta <- function(x) UseMethod("extract_nbeta")
 extract_nbeta.cea_mcglm <- function(x) length(x$Regression)
 extract_nbeta.cea_mglmmPQL <- function(x) length(x$coefficients$fixed)
+#extract_nbeta.cea_brms <- function(x) nrow(brms::fixef(x))
 
 update_coefs <- function(x, value) UseMethod("update_coefs")
 update_coefs.cea_mcglm <- function(x, value) {x$Regression <- value; x}

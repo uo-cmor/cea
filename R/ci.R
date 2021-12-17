@@ -40,14 +40,20 @@ ci <- function(x, outcomes = "INMB", conf = 0.9, type, wtp, estimand = "ATE", ..
 ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9,
                             type = if (sim == "parametric") "perc" else "bca", wtp,
                             estimand = "ATE", method = "delta", R, sim = "parametric", ...) {
-  if (!rlang::is_string(method, c("boot", "delta"))) stop_unknown_method(method)
+  if (!inherits(x, "cea_brms") && !rlang::is_string(method, c("boot", "delta")))
+    stop_unknown_method(method)
+  if (inherits(x, "cea_brms") &&
+      (!missing(type) || !missing(method) || !missing(R) || !missing(sim)))
+    message_unused_brms_arguments("ci")
   if (!rlang::is_character(outcomes)) stop_invalid_outcome()
   if (!all(outcomes %in% c(extract_outcomes(x), "INMB", "INHB"))) stop_unknown_outcome(
     outcomes[which.max(!(outcomes %in% c(extract_outcomes(x), "INMB", "INHB")))]
   )
   if (any(c("INMB", "INHB") %in% outcomes) && missing(wtp)) stop_missing_wtp()
 
-  if (method == "delta") {
+  if (inherits(x, "cea_brms")) {
+    out <- calculate_posterior_cis(x, outcomes, conf, wtp, estimand)
+  } else if (method == "delta") {
     out <- calculate_delta_cis(x, outcomes, conf, wtp, estimand)
   } else {
     if (method == "boot" && missing(R)) stop_missing_R()
@@ -63,7 +69,7 @@ ci.cea_estimate <- function(x, outcomes = "INMB", conf = 0.9,
 
   class(out) <- "cea_ci"
   attr(out, "conf") <- conf
-  attr(out, "method") <- method
+  attr(out, "method") <- if (inherits(x, "cea_brms")) "posterior" else method
   if (method == "boot") attr(out, "type") <- type
   if (method == "boot") attr(out, "R") <- R
   if (method == "boot") attr(out, "sim") <- sim
@@ -211,6 +217,22 @@ calculate_delta_cis <- function(x, outcomes, conf, wtp, estimand) {
                          numeric(2)))
     colnames(out[[i]]) <- c("Lower", "Upper")
     rownames(out[[i]]) <- extract_tx(x)
+  }
+  out
+}
+
+calculate_posterior_cis <- function(x, outcomes, conf, wtp, estimand) {
+  out <- list()
+  nd <- brms::ndraws(x)
+  alpha <- (1 + c(-conf, conf))/2
+
+  for (i in outcomes) {
+    out[[i]] <- switch(i,
+                       INMB = INMB(x, wtp, estimand, draw = seq_len(nd)),
+                       INHB = INHB(x, wtp, estimand, draw = seq_len(nd)),
+                       extract(x, i, estimand, draw = seq_len(nd)))
+    out[[i]] <- t(apply(out[[i]], 2, stats::quantile, probs = alpha))
+    dimnames(out[[i]]) <- list(extract_tx(x), c("Lower", "Upper"))
   }
   out
 }
